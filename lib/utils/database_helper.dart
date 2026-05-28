@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tailoring_system/core/database/app_sequence_repository.dart';
 import 'package:tailoring_system/core/database/database_schema.dart';
 import 'package:tailoring_system/models/customer.dart';
@@ -24,13 +25,17 @@ class DatabaseHelper {
 
   Future<Database> _initDB(String filePath) async {
     if (kIsWeb) {
-      // On web, use in-memory database
-      return await openDatabase(
+      // On web, use sqflite_common_ffi for persistent storage
+      sqfliteFfiInit();
+      final databaseFactory = databaseFactoryFfi;
+      return await databaseFactory.openDatabase(
         filePath,
-        version: DatabaseSchema.version,
-        onCreate: _createDB,
-        onUpgrade: _onUpgrade,
-        onConfigure: _onConfigure,
+        options: OpenDatabaseOptions(
+          version: DatabaseSchema.version,
+          onCreate: _createDB,
+          onUpgrade: _onUpgrade,
+          onConfigure: _onConfigure,
+        ),
       );
     } else {
       final dbPath = await getDatabasesPath();

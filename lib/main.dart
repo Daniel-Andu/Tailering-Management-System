@@ -6,6 +6,7 @@ import 'package:tailoring_system/app/production_shell_screen.dart';
 import 'package:tailoring_system/providers/language_provider.dart';
 import 'package:tailoring_system/providers/customer_provider.dart';
 import 'package:tailoring_system/providers/order_provider.dart';
+import 'package:tailoring_system/utils/database_helper.dart';
 import 'package:tailoring_system/features/appointments/providers/appointment_provider.dart';
 import 'package:tailoring_system/features/customers/providers/customer_directory_provider.dart';
 import 'package:tailoring_system/features/customers/providers/customer_profile_provider.dart';
@@ -250,6 +251,14 @@ class _AppInitializerState extends State<AppInitializer> {
   }
 
   Future<void> _initializeApp() async {
+    // Initialize database first
+    try {
+      await DatabaseHelper.instance.database;
+      print('Database initialized successfully');
+    } catch (e) {
+      print('Database initialization error: $e');
+    }
+
     await Future.delayed(const Duration(seconds: 1));
 
     if (!mounted) return;
