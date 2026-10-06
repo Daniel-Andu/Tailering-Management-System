@@ -1,13 +1,12 @@
-import 'dart:io';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LicenseManager {
   static const _storage = FlutterSecureStorage();
-  static const _trialDays =
-      14; // Reduced from 30 to 14 days to encourage purchase
+  static const _trialDays = 30; // 30 day trial period
   static const _licenseKeyFormat =
       r'^TAILOR-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$';
+  static const _licenseSalt = 'TAILORING_SYSTEM_OFFLINE_LICENSE_V1';
 
   // Device ID storage and generation
   static Future<String> getDeviceId() async {
@@ -16,23 +15,11 @@ class LicenseManager {
       return deviceId;
     }
 
-    // Generate device ID
-    final deviceInfo = DeviceInfoPlugin();
-    if (Platform.isAndroid) {
-      final androidInfo = await deviceInfo.androidInfo;
-      deviceId = androidInfo.id;
-    } else if (Platform.isIOS) {
-      final iosInfo = await deviceInfo.iosInfo;
-      deviceId = iosInfo.identifierForVendor ?? 'unknown-ios';
-    } else if (Platform.isWindows) {
-      final windowsInfo = await deviceInfo.windowsInfo;
-      deviceId = windowsInfo.deviceId;
-    } else if (Platform.isLinux) {
-      final linuxInfo = await deviceInfo.linuxInfo;
-      deviceId = linuxInfo.machineId ?? 'unknown-linux';
-    } else {
-      deviceId = 'web-${DateTime.now().millisecondsSinceEpoch}';
-    }
+    const prefix = kIsWeb ? 'WEB' : 'TAILOR';
+    final now = DateTime.now().microsecondsSinceEpoch;
+    deviceId =
+        '$prefix-${_toHex(now & 0xFFFF)}-${_toHex((now >> 16) & 0xFFFF)}'
+        '-${_toHex(_stableHash(now.toString()) & 0xFFFF)}';
 
     await _storage.write(key: 'device_id', value: deviceId);
     return deviceId;
@@ -97,8 +84,7 @@ class LicenseManager {
       String licenseKey, String companyName) async {
     final deviceId = await getDeviceId();
 
-    // Validate license key format and device binding
-    if (await _validateLicenseWithDevice(licenseKey)) {
+    if (await _validateLicenseWithDeviceAndCompany(licenseKey, companyName)) {
       await _storage.write(key: 'license_key', value: licenseKey);
       await _storage.write(
         key: 'activation_date',
@@ -121,17 +107,25 @@ class LicenseManager {
       return false;
     }
 
-    // Check if license is bound to this device
     final boundDeviceId = await _storage.read(key: 'bound_device_id');
     final currentDeviceId = await getDeviceId();
 
-    // If license is already bound to a device, check if it matches
     if (boundDeviceId != null && boundDeviceId.isNotEmpty) {
-      return boundDeviceId == currentDeviceId;
+      final companyName = await getCompanyName();
+      if (companyName == null || companyName.isEmpty) return false;
+      return boundDeviceId == currentDeviceId &&
+          await _validateLicenseWithDeviceAndCompany(licenseKey, companyName);
     }
 
-    // For new activation, we'll validate in activateLicense
-    return true;
+    return false;
+  }
+
+  static Future<bool> _validateLicenseWithDeviceAndCompany(
+      String licenseKey, String companyName) async {
+    if (!_validateLicenseKey(licenseKey)) return false;
+    final deviceId = await getDeviceId();
+    return licenseKey.toUpperCase() ==
+        generateLicenseKey(deviceId, companyName).toUpperCase();
   }
 
   static Future<String> getLicenseInfo() async {
@@ -150,21 +144,32 @@ class LicenseManager {
     return 'License Type: Trial Version\nDays Remaining: $daysRemaining\nDevice ID: $deviceId\nStatus: ${daysRemaining > 0 ? 'Active' : 'Expired'}';
   }
 
-  // Generate a license key for a specific device and company
-  // You'll use this to generate keys for your customers
+  /// Generate a license key for a specific device and company.
+  /// Use this tool to generate keys for customers.
   static String generateLicenseKey(String deviceId, String companyName) {
     const base = 'TAILOR';
 
-    // Create a hash from device ID and company name
-    final deviceHash = deviceId.hashCode.abs();
-    final companyHash = companyName.hashCode.abs();
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final normalizedDevice = deviceId.trim().toUpperCase();
+    final normalizedCompany = companyName.trim().toUpperCase();
+    final hash = _stableHash(
+      '$_licenseSalt|$normalizedDevice|$normalizedCompany',
+    );
 
-    final part1 = _toHex((deviceHash + timestamp) & 0xFFFF);
-    final part2 = _toHex((companyHash + timestamp) & 0xFFFF);
-    final part3 = _toHex(timestamp & 0xFFFF);
+    final part1 = _toHex(hash & 0xFFFF);
+    final part2 = _toHex((hash >> 16) & 0xFFFF);
+    final part3 =
+        _toHex(_stableHash('$normalizedCompany|$normalizedDevice') & 0xFFFF);
 
     return '$base-$part1-$part2-$part3';
+  }
+
+  static int _stableHash(String input) {
+    var hash = 0x811C9DC5;
+    for (final codeUnit in input.codeUnits) {
+      hash ^= codeUnit;
+      hash = (hash * 0x01000193) & 0xFFFFFFFF;
+    }
+    return hash;
   }
 
   static String _toHex(int value) {

@@ -30,6 +30,63 @@ class MeasurementRepository {
     );
   }
 
+  // ── Custom extra fields (tailor-defined) ──────────────────────────────────
+
+  Future<List<Map<String, Object?>>> getCustomFields() async {
+    final db = await DatabaseHelper.instance.database;
+    return db.query(
+      'custom_measurement_fields',
+      orderBy: 'sort_order ASC, id ASC',
+    );
+  }
+
+  Future<int> addCustomField({
+    required String label,
+    String unit = 'cm',
+  }) async {
+    final db = await DatabaseHelper.instance.database;
+    final existing = await db.query(
+      'custom_measurement_fields',
+      orderBy: 'sort_order DESC',
+      limit: 1,
+    );
+    final nextOrder = existing.isEmpty
+        ? 0
+        : ((existing.first['sort_order'] as int?) ?? 0) + 1;
+
+    return db.insert('custom_measurement_fields', {
+      'label': label.trim(),
+      'unit': unit.trim(),
+      'sort_order': nextOrder,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<int> updateCustomField({
+    required int id,
+    required String label,
+    required String unit,
+  }) async {
+    final db = await DatabaseHelper.instance.database;
+    return db.update(
+      'custom_measurement_fields',
+      {'label': label.trim(), 'unit': unit.trim()},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<int> deleteCustomField(int id) async {
+    final db = await DatabaseHelper.instance.database;
+    return db.delete(
+      'custom_measurement_fields',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // ── Templates ─────────────────────────────────────────────────────────────
+
   Future<int> createTemplate({
     required int clothTypeId,
     required String name,
@@ -66,6 +123,8 @@ class MeasurementRepository {
       return templateId;
     });
   }
+
+  // ── Customer measurements ─────────────────────────────────────────────────
 
   Future<int> saveCustomerMeasurement({
     required int customerId,

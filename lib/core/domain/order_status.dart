@@ -28,6 +28,43 @@ class OrderStatuses {
     cancelled,
     delayed,
   ];
+
+  static String displayLabel(String status, {String locale = 'en'}) {
+    final normalized = status.trim();
+    final labels = locale.startsWith('am')
+        ? {
+            draft: 'ረቂቅ',
+            confirmed: 'ተረጋግጧል',
+            measurementTaken: 'መለኪያ ተወስዷል',
+            cutting: 'መቁረጥ',
+            sewing: 'ምሰሶ',
+            firstFitting: 'የመጀመሪያ ማስተካከያ',
+            adjustment: 'ማስተካከያ',
+            finalPressing: 'የመጨረሻ ማጣራት',
+            readyForPickup: 'ለመውሰድ ዝግጁ',
+            delivered: 'ተልኳል',
+            completed: 'ተጠናቋል',
+            cancelled: 'ተሰርዟል',
+            delayed: 'ተዘግዧል',
+          }
+        : {
+            draft: 'Draft',
+            confirmed: 'Confirmed',
+            measurementTaken: 'Measurement taken',
+            cutting: 'Cutting',
+            sewing: 'Sewing',
+            firstFitting: 'First fitting',
+            adjustment: 'Adjustment',
+            finalPressing: 'Final pressing',
+            readyForPickup: 'Ready for pickup',
+            delivered: 'Delivered',
+            completed: 'Completed',
+            cancelled: 'Cancelled',
+            delayed: 'Delayed',
+          };
+
+    return labels[normalized] ?? normalized.replaceAll('_', ' ');
+  }
 }
 
 class OrderPriorities {

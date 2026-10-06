@@ -76,7 +76,7 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
                 child: provider.isLoading && provider.customers.isEmpty
                     ? const Center(child: CircularProgressIndicator())
                     : provider.customers.isEmpty
-                        ? const Center(child: Text('No customers found'))
+                        ? Center(child: Text(l10n.noCustomersFound))
                         : ListView.separated(
                             padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
                             itemCount: provider.customers.length,
@@ -130,53 +130,131 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
             initialChildSize: 0.75,
             minChildSize: 0.4,
             maxChildSize: 0.95,
-            builder: (context, scrollController) => ListView(
-              controller: scrollController,
-              padding: const EdgeInsets.all(16),
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${customer['name'] ?? '-'}',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () => _showEditCustomerDialog(customer),
-                      tooltip: 'Edit Customer',
-                    ),
-                  ],
+            builder: (context, scrollController) => Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                backgroundColor: Colors.transparent,
+                automaticallyImplyLeading: false,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  tooltip: 'Back to customers',
+                  onPressed: () => Navigator.of(context).pop(),
                 ),
-                const SizedBox(height: 4),
-                Text('${customer['phone'] ?? ''}'),
-                const SizedBox(height: 16),
-                if (stats != null)
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      _ProfileMetric('Orders', stats.totalOrders.toString()),
-                      _ProfileMetric(
-                          'Completed', stats.completedOrders.toString()),
-                      _ProfileMetric(
-                        'Balance',
-                        '${stats.totalBalance.toStringAsFixed(2)} ETB',
+                title: const Text('Customer detail'),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => _showEditCustomerDialog(customer),
+                    tooltip: 'Edit Customer',
+                  ),
+                ],
+              ),
+              body: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 28,
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withOpacity(0.12),
+                              child: Text(
+                                _initials('${customer['name'] ?? ''}'),
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${customer['name'] ?? '-'}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${customer['phone'] ?? 'No phone'}',
+                                    style: Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 18),
+                        _InfoRow(label: 'Business', value: '${customer['businessName'] ?? '-'}'),
+                        _InfoRow(label: 'Address', value: '${customer['address'] ?? '-'}'),
+                        _InfoRow(label: 'Category', value: '${customer['category'] ?? 'regular'}'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  if (stats != null)
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        _ProfileMetric('Orders', stats.totalOrders.toString()),
+                        _ProfileMetric(
+                          'Completed',
+                          stats.completedOrders.toString(),
+                        ),
+                        _ProfileMetric(
+                          'Balance',
+                          '${stats.totalBalance.toStringAsFixed(2)} ETB',
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Timeline',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  for (final event in provider.timeline)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
-                  ),
-                const SizedBox(height: 20),
-                Text('Timeline',
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 8),
-                for (final event in provider.timeline)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.timeline),
-                    title: Text('${event['type']}  ${event['title'] ?? ''}'),
-                    subtitle: Text('${event['occurred_at'] ?? ''}'),
-                  ),
-              ],
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        leading: const Icon(Icons.timeline),
+                        title: Text('${event['type']}  ${event['title'] ?? ''}'),
+                        subtitle: Text('${event['occurred_at'] ?? ''}'),
+                      ),
+                    ),
+                ],
+              ),
             ),
           );
         },
@@ -200,10 +278,10 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+          child: SizedBox(
+            width: 500,
+            height: 600,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 // Header
                 Container(
@@ -286,7 +364,7 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
                             child: Column(
                               children: [
                                 DropdownButtonFormField<String>(
-                                  value: category,
+                                  initialValue: category,
                                   decoration: InputDecoration(
                                     labelText: l10n.customersCategory,
                                     prefixIcon: const Icon(Icons.category),
@@ -304,13 +382,14 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
                                     ),
                                   ],
                                   onChanged: (value) {
-                                    if (value != null)
+                                    if (value != null) {
                                       setDialogState(() => category = value);
+                                    }
                                   },
                                 ),
                                 const SizedBox(height: 12),
                                 DropdownButtonFormField<String>(
-                                  value: language,
+                                  initialValue: language,
                                   decoration: InputDecoration(
                                     labelText: l10n.customersLanguage,
                                     prefixIcon: const Icon(Icons.language),
@@ -324,8 +403,9 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
                                         child: Text(l10n.customersEnglish)),
                                   ],
                                   onChanged: (value) {
-                                    if (value != null)
+                                    if (value != null) {
                                       setDialogState(() => language = value);
+                                    }
                                   },
                                 ),
                                 const SizedBox(height: 12),
@@ -412,10 +492,10 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+          child: SizedBox(
+            width: 500,
+            height: 600,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 // Header
                 Container(
@@ -498,7 +578,7 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
                             child: Column(
                               children: [
                                 DropdownButtonFormField<String>(
-                                  value: category,
+                                  initialValue: category,
                                   decoration: InputDecoration(
                                     labelText: l10n.customersCategory,
                                     prefixIcon: const Icon(Icons.category),
@@ -516,13 +596,14 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
                                     ),
                                   ],
                                   onChanged: (value) {
-                                    if (value != null)
+                                    if (value != null) {
                                       setDialogState(() => category = value);
+                                    }
                                   },
                                 ),
                                 const SizedBox(height: 12),
                                 DropdownButtonFormField<String>(
-                                  value: language,
+                                  initialValue: language,
                                   decoration: InputDecoration(
                                     labelText: l10n.customersLanguage,
                                     prefixIcon: const Icon(Icons.language),
@@ -536,8 +617,9 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
                                         child: Text(l10n.customersEnglish)),
                                   ],
                                   onChanged: (value) {
-                                    if (value != null)
+                                    if (value != null) {
                                       setDialogState(() => language = value);
+                                    }
                                   },
                                 ),
                                 const SizedBox(height: 12),

@@ -76,11 +76,13 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
   }
 
   void _saveOrder() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (_formKey.currentState!.validate()) {
       if (_selectedCustomer == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a customer'),
+          SnackBar(
+            content: Text(l10n.pleaseSelectCustomer),
             backgroundColor: Colors.red,
           ),
         );
@@ -121,8 +123,8 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(widget.order == null
-                  ? 'Order added successfully'
-                  : 'Order updated successfully'),
+                  ? l10n.orderFormAddedMessage
+                  : l10n.orderFormUpdatedMessage),
               backgroundColor: Colors.green,
             ),
           );
@@ -147,155 +149,161 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.order == null ? l10n.orderFormTitle : 'Edit Order',
+          widget.order == null ? l10n.orderFormTitle : l10n.orderFormEditTitle,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.blue[900],
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Consumer<CustomerProvider>(
-              builder: (context, customerProvider, child) {
-                final customers = customerProvider.customers;
-                return DropdownButtonFormField<Customer>(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Consumer<CustomerProvider>(
+                  builder: (context, customerProvider, child) {
+                    final customers = customerProvider.customers;
+                    return DropdownButtonFormField<Customer>(
+                      decoration: InputDecoration(
+                        labelText: '${l10n.orderFormSelectCustomer} *',
+                        border: const OutlineInputBorder(),
+                      ),
+                      initialValue: _selectedCustomer,
+                      items: customers.map((customer) {
+                        return DropdownMenuItem(
+                          value: customer,
+                          child: Text(customer.name),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedCustomer = value;
+                        });
+                      },
+                      validator: (value) =>
+                          value == null ? l10n.orderFormCustomerRequired : null,
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _clothTypeController,
                   decoration: InputDecoration(
-                    labelText: '${l10n.orderFormSelectCustomer} *',
+                    labelText: '${l10n.orderFormClothType} *',
                     border: const OutlineInputBorder(),
                   ),
-                  initialValue: _selectedCustomer,
-                  items: customers.map((customer) {
+                  validator: (value) =>
+                      value!.isEmpty ? l10n.orderFormClothTypeRequired : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _priceController,
+                  decoration: InputDecoration(
+                    labelText: '${l10n.orderFormPrice} *',
+                    border: const OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) =>
+                      value!.isEmpty ? l10n.orderFormPriceRequired : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _deliveryDateController,
+                  decoration: InputDecoration(
+                    labelText: l10n.orderFormDeliveryDate,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: const Icon(Icons.calendar_today),
+                  ),
+                  readOnly: true,
+                  onTap: _selectDeliveryDate,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: l10n.orderFormStatus,
+                    border: const OutlineInputBorder(),
+                  ),
+                  initialValue: _status,
+                  items: _statusOptions.map((status) {
                     return DropdownMenuItem(
-                      value: customer,
-                      child: Text(customer.name),
+                      value: status,
+                      child: Text(status),
                     );
                   }).toList(),
                   onChanged: (value) {
                     setState(() {
-                      _selectedCustomer = value;
+                      _status = value!;
                     });
                   },
-                  validator: (value) =>
-                      value == null ? 'Customer is required' : null,
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _clothTypeController,
-              decoration: InputDecoration(
-                labelText: '${l10n.orderFormClothType} *',
-                border: const OutlineInputBorder(),
-              ),
-              validator: (value) =>
-                  value!.isEmpty ? 'Cloth type is required' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _priceController,
-              decoration: InputDecoration(
-                labelText: '${l10n.orderFormPrice} *',
-                border: const OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-              validator: (value) => value!.isEmpty ? 'Price is required' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _deliveryDateController,
-              decoration: InputDecoration(
-                labelText: l10n.orderFormDeliveryDate,
-                border: const OutlineInputBorder(),
-                suffixIcon: const Icon(Icons.calendar_today),
-              ),
-              readOnly: true,
-              onTap: _selectDeliveryDate,
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              decoration: InputDecoration(
-                labelText: l10n.orderFormStatus,
-                border: const OutlineInputBorder(),
-              ),
-              initialValue: _status,
-              items: _statusOptions.map((status) {
-                return DropdownMenuItem(
-                  value: status,
-                  child: Text(status),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _status = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _notesController,
-              decoration: const InputDecoration(
-                labelText: 'Notes',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _paymentMethodController,
-              decoration: const InputDecoration(
-                labelText: 'Payment Method',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _transactionIdController,
-              decoration: const InputDecoration(
-                labelText: 'Transaction ID',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Payment Status',
-                border: OutlineInputBorder(),
-              ),
-              initialValue: _paymentStatus,
-              items: _paymentStatuses.map((status) {
-                return DropdownMenuItem(
-                  value: status,
-                  child: Text(status),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _paymentStatus = value!;
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _saveOrder,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[900],
                 ),
-                child: Text(
-                  l10n.orderFormSaveOrder,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _notesController,
+                  decoration: InputDecoration(
+                    labelText: l10n.orderFormNotes,
+                    border: const OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _paymentMethodController,
+                  decoration: InputDecoration(
+                    labelText: l10n.orderFormPaymentMethod,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _transactionIdController,
+                  decoration: InputDecoration(
+                    labelText: l10n.orderFormTransactionId,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: l10n.orderFormPaymentStatus,
+                    border: const OutlineInputBorder(),
+                  ),
+                  initialValue: _paymentStatus,
+                  items: _paymentStatuses.map((status) {
+                    return DropdownMenuItem(
+                      value: status,
+                      child: Text(status),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _paymentStatus = value!;
+                    });
+                  },
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _saveOrder,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[900],
+                    ),
+                    child: Text(
+                      l10n.orderFormSaveOrder,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

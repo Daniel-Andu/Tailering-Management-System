@@ -1,52 +1,51 @@
-// License Key Generator Tool
-// Use this to generate license keys for your customers
-// Run with: dart tools/generate_license.dart
+import 'dart:io';
 
-void main() {
-  print('=== Tailoring System License Key Generator ===\n');
-  
-  print('Instructions:');
-  print('1. Ask the customer to install the app and get their Device ID from the license screen');
-  print('2. Enter their Device ID and Company Name below');
-  print('3. Copy the generated license key and give it to them');
-  print('4. They enter the license key in the app to activate\n');
-  
-  print('Example:');
-  print('Device ID: android-1234567890abcdef');
-  print('Company Name: ABC Tailoring Shop');
-  print('Generated Key: TAILOR-A1B2-C3D4-E5F6\n');
-  
-  // Interactive input
-  print('Enter Device ID:');
-  // In a real scenario, you would read from stdin
-  // For now, this is a template
-  
-  print('\nEnter Company Name:');
-  // In a real scenario, you would read from stdin
-  
-  // Example generation
-  final exampleDeviceId = 'android-1234567890abcdef';
-  final exampleCompanyName = 'ABC Tailoring Shop';
-  final licenseKey = _generateLicenseKey(exampleDeviceId, exampleCompanyName);
-  
-  print('\nExample Generated License Key:');
-  print('$licenseKey');
-  print('\nPrice: 2000 ETB (or your chosen price)');
+void main(List<String> args) {
+  final deviceId = args.isNotEmpty ? args[0] : _prompt('Device ID');
+  final companyName =
+      args.length > 1 ? args.sublist(1).join(' ') : _prompt('Company name');
+
+  final licenseKey = generateLicenseKey(deviceId, companyName);
+
+  stdout.writeln('\nTailoring System License');
+  stdout.writeln('Device ID: $deviceId');
+  stdout.writeln('Company: $companyName');
+  stdout.writeln('License Key: $licenseKey');
+  stdout.writeln('\nGive this key to the tailor after payment.');
 }
 
-String _generateLicenseKey(String deviceId, String companyName) {
-  const base = 'TAILOR';
-  
-  // Create a hash from device ID and company name
-  final deviceHash = deviceId.hashCode.abs();
-  final companyHash = companyName.hashCode.abs();
-  final timestamp = DateTime.now().millisecondsSinceEpoch;
+String _prompt(String label) {
+  stdout.write('$label: ');
+  final value = stdin.readLineSync()?.trim() ?? '';
+  if (value.isEmpty) {
+    stderr.writeln('$label is required.');
+    exit(64);
+  }
+  return value;
+}
 
-  final part1 = _toHex((deviceHash + timestamp) & 0xFFFF);
-  final part2 = _toHex((companyHash + timestamp) & 0xFFFF);
-  final part3 = _toHex(timestamp & 0xFFFF);
+String generateLicenseKey(String deviceId, String companyName) {
+  const base = 'TAILOR';
+  const salt = 'TAILORING_SYSTEM_OFFLINE_LICENSE_V1';
+  final normalizedDevice = deviceId.trim().toUpperCase();
+  final normalizedCompany = companyName.trim().toUpperCase();
+  final hash = _stableHash('$salt|$normalizedDevice|$normalizedCompany');
+
+  final part1 = _toHex(hash & 0xFFFF);
+  final part2 = _toHex((hash >> 16) & 0xFFFF);
+  final part3 =
+      _toHex(_stableHash('$normalizedCompany|$normalizedDevice') & 0xFFFF);
 
   return '$base-$part1-$part2-$part3';
+}
+
+int _stableHash(String input) {
+  var hash = 0x811C9DC5;
+  for (final codeUnit in input.codeUnits) {
+    hash ^= codeUnit;
+    hash = (hash * 0x01000193) & 0xFFFFFFFF;
+  }
+  return hash;
 }
 
 String _toHex(int value) {

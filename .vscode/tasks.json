@@ -1,0 +1,237 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Prepare web SQLite binaries",
+			"type": "shell",
+			"command": "dart",
+			"args": [
+				"run",
+				"sqflite_common_ffi_web:setup"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Build Android release APK",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"build",
+				"apk",
+				"--release"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Check connected Flutter devices",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"devices"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "List available Android emulators",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"emulators"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Start Pixel 8 emulator",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"emulators",
+				"--launch",
+				"Pixel_8"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check emulator status",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"devices"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Verify web release build",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"build",
+				"web",
+				"--release"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Recheck Android devices",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"devices",
+				"--device-timeout",
+				"10"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Build release APK with debug fallback",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"clean",
+				"&&",
+				"flutter",
+				"pub",
+				"get",
+				"&&",
+				"flutter",
+				"build",
+				"apk",
+				"--release"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Check Flutter environment",
+			"type": "shell",
+			"command": "flutter doctor -v",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Clean Flutter build",
+			"type": "shell",
+			"command": "flutter clean",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Get dependencies",
+			"type": "shell",
+			"command": "flutter pub get",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Build release APK",
+			"type": "shell",
+			"command": "flutter build apk --release",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "List cached Gradle versions",
+			"type": "shell",
+			"command": "dir %GRADLE_USER_HOME%\\wrapper\\dists",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check Java version",
+			"type": "shell",
+			"command": "java -version",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check Flutter JDK config",
+			"type": "shell",
+			"command": "flutter config --jdk-dir",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Show Flutter config",
+			"type": "shell",
+			"command": "flutter config",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Build APK (no pub, offline)",
+			"type": "shell",
+			"command": "flutter build apk --release --no-pub",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "List cached Gradle",
+			"type": "shell",
+			"command": "dir %UserProfile%\\.gradle\\wrapper\\dists",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check cached Gradle versions",
+			"type": "shell",
+			"command": "Get-ChildItem \"$env:UserProfile\\.gradle\\wrapper\\dists\" -ErrorAction SilentlyContinue",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Build APK with Gradle 8.12",
+			"type": "shell",
+			"command": "flutter build apk --release --no-pub",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "Wait 2 minutes",
+			"type": "shell",
+			"command": "Write-Host 'Waiting for build...'; Start-Sleep -Seconds 120",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check active Java/Gradle processes",
+			"type": "shell",
+			"command": "Get-Process | Where-Object {$_.ProcessName -like '*gradle*' -or $_.ProcessName -like '*java*'} | Format-Table Name, Id, WorkingSet",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Wait 3 more minutes",
+			"type": "shell",
+			"command": "Write-Host 'Waiting for build...'; Start-Sleep -Seconds 180",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Find APK files",
+			"type": "shell",
+			"command": "Get-ChildItem 'build' -Recurse -ErrorAction SilentlyContinue | Where-Object {$_.Name -like '*.apk'} | Select-Object FullName, Length",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Check Java process duration",
+			"type": "shell",
+			"command": "Get-Process java | ForEach-Object { Write-Host \"Process $($_.Id): Running for $(((Get-Date) - $_.StartTime).TotalSeconds) seconds\" }",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

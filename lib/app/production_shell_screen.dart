@@ -4,6 +4,7 @@ import 'package:tailoring_system/features/appointments/screens/appointments_scre
 import 'package:tailoring_system/features/customers/screens/customer_directory_screen.dart';
 import 'package:tailoring_system/features/dashboard/screens/production_dashboard_screen.dart';
 import 'package:tailoring_system/features/inventory/screens/inventory_screen.dart';
+import 'package:tailoring_system/features/measurements/screens/measurements_screen.dart';
 import 'package:tailoring_system/features/notifications/screens/notifications_screen.dart';
 import 'package:tailoring_system/features/orders/screens/order_board_screen.dart';
 import 'package:tailoring_system/features/reports/screens/financial_reports_screen.dart';
@@ -22,28 +23,17 @@ class ProductionShellScreen extends StatefulWidget {
 class _ProductionShellScreenState extends State<ProductionShellScreen> {
   int _selectedIndex = 0;
 
-  final _pages = const [
+  static const _pages = [
     ProductionDashboardScreen(),
     CustomerDirectoryScreen(),
     OrderBoardScreen(),
     AppointmentsScreen(),
     InventoryScreen(),
+    MeasurementsScreen(),
     FinancialReportsScreen(),
     NotificationsScreen(),
     StaffScreen(),
     ShopSettingsScreen(),
-  ];
-
-  final _destinations = const [
-    _Destination('Dashboard', Icons.dashboard_outlined),
-    _Destination('Customers', Icons.people_outline),
-    _Destination('Orders', Icons.assignment_outlined),
-    _Destination('Appointments', Icons.event_outlined),
-    _Destination('Inventory', Icons.inventory_2_outlined),
-    _Destination('Reports', Icons.bar_chart_outlined),
-    _Destination('Notifications', Icons.sms_outlined),
-    _Destination('Staff', Icons.badge_outlined),
-    _Destination('Settings', Icons.settings_outlined),
   ];
 
   @override
@@ -54,145 +44,202 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final wide = constraints.maxWidth >= 900;
+        final extended = constraints.maxWidth >= 1200;
+
         if (wide) {
           return Scaffold(
+            appBar: _buildAppBar(context, l10n, languageProvider),
             body: Row(
               children: [
                 NavigationRail(
                   selectedIndex: _selectedIndex,
-                  extended: constraints.maxWidth >= 1180,
+                  extended: extended,
                   onDestinationSelected: (index) {
                     setState(() => _selectedIndex = index);
                   },
-                  destinations: [
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.dashboard_outlined),
-                      selectedIcon: const Icon(Icons.dashboard),
-                      label: Text(l10n.menuDashboard),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.people_outline),
-                      selectedIcon: const Icon(Icons.people),
-                      label: Text(l10n.menuCustomers),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.assignment_outlined),
-                      selectedIcon: const Icon(Icons.assignment),
-                      label: Text(l10n.menuOrders),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.event_outlined),
-                      selectedIcon: const Icon(Icons.event),
-                      label: Text(l10n.menuAppointments),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.inventory_2_outlined),
-                      selectedIcon: const Icon(Icons.inventory_2),
-                      label: Text(l10n.menuInventory),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.bar_chart_outlined),
-                      selectedIcon: const Icon(Icons.bar_chart),
-                      label: Text(l10n.menuReports),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.sms_outlined),
-                      selectedIcon: const Icon(Icons.sms),
-                      label: Text(l10n.menuNotifications),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.badge_outlined),
-                      selectedIcon: const Icon(Icons.badge),
-                      label: Text(l10n.menuStaff),
-                    ),
-                    NavigationRailDestination(
-                      icon: const Icon(Icons.settings_outlined),
-                      selectedIcon: const Icon(Icons.settings),
-                      label: Text(l10n.menuSettings),
-                    ),
-                  ],
+                  leading: extended
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(Icons.checkroom,
+                                    color:
+                                        Theme.of(context).colorScheme.primary),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                l10n.appTitle,
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                    color:
+                                        Theme.of(context).colorScheme.primary),
+                              ),
+                            ],
+                          ),
+                        )
+                      : null,
+                  destinations: _buildRailDestinations(l10n),
                 ),
                 const VerticalDivider(width: 1),
                 Expanded(child: _pages[_selectedIndex]),
-              ],
-            ),
-            appBar: AppBar(
-              title: Text(_getDestinationLabel(_selectedIndex, l10n)),
-              actions: [
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.language),
-                    onPressed: () {
-                      languageProvider.toggleLanguage();
-                    },
-                    tooltip: languageProvider.isAmharic ? 'English' : 'አማርኛ',
-                  ),
-                ),
               ],
             ),
           );
         }
 
         return Scaffold(
+          appBar: _buildAppBar(context, l10n, languageProvider),
           body: _pages[_selectedIndex],
-          appBar: AppBar(
-            title: Text(_getDestinationLabel(_selectedIndex, l10n)),
-            actions: [
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.language),
-                  onPressed: () {
-                    languageProvider.toggleLanguage();
-                  },
-                  tooltip: languageProvider.isAmharic ? 'English' : 'አማርኛ',
-                ),
-              ),
-            ],
-          ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: _mobileSelectedIndex,
-            onDestinationSelected: (index) {
-              setState(() => _selectedIndex = _pageIndexForMobileTab(index));
-            },
-            destinations: [
-              NavigationDestination(
-                icon: const Icon(Icons.dashboard_outlined),
-                label: l10n.menuDashboard,
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.people_outline),
-                label: l10n.menuCustomers,
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.assignment_outlined),
-                label: l10n.menuOrders,
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.inventory_2_outlined),
-                label: l10n.menuInventory,
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.more_horiz),
-                label: l10n.menuMore,
-              ),
-            ],
-          ),
+          bottomNavigationBar: _buildBottomNav(l10n),
         );
       },
     );
   }
 
-  String _getDestinationLabel(int index, AppLocalizations l10n) {
+  AppBar _buildAppBar(BuildContext context, AppLocalizations l10n,
+      LanguageProvider languageProvider) {
+    return AppBar(
+      title: Row(
+        children: [
+          const Icon(Icons.checkroom, size: 22),
+          const SizedBox(width: 8),
+          Text(_getPageTitle(_selectedIndex, l10n)),
+        ],
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: Material(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(12),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => languageProvider.toggleLanguage(),
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.language, size: 18, color: Colors.white),
+                    const SizedBox(width: 6),
+                    Text(
+                      languageProvider.isAmharic ? 'EN' : 'አማ',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<NavigationRailDestination> _buildRailDestinations(AppLocalizations l10n) {
+    return [
+      NavigationRailDestination(
+        icon: const Icon(Icons.dashboard_outlined),
+        selectedIcon: const Icon(Icons.dashboard),
+        label: Text(l10n.menuDashboard),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.people_outline),
+        selectedIcon: const Icon(Icons.people),
+        label: Text(l10n.menuCustomers),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.assignment_outlined),
+        selectedIcon: const Icon(Icons.assignment),
+        label: Text(l10n.menuOrders),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.event_outlined),
+        selectedIcon: const Icon(Icons.event),
+        label: Text(l10n.menuAppointments),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.inventory_2_outlined),
+        selectedIcon: const Icon(Icons.inventory_2),
+        label: Text(l10n.menuInventory),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.straighten_outlined),
+        selectedIcon: const Icon(Icons.straighten),
+        label: Text(l10n.menuMeasurements),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.bar_chart_outlined),
+        selectedIcon: const Icon(Icons.bar_chart),
+        label: Text(l10n.menuReports),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.sms_outlined),
+        selectedIcon: const Icon(Icons.sms),
+        label: Text(l10n.menuNotifications),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.badge_outlined),
+        selectedIcon: const Icon(Icons.badge),
+        label: Text(l10n.menuStaff),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.settings_outlined),
+        selectedIcon: const Icon(Icons.settings),
+        label: Text(l10n.menuSettings),
+      ),
+    ];
+  }
+
+  NavigationBar _buildBottomNav(AppLocalizations l10n) {
+    return NavigationBar(
+      selectedIndex: _mobileSelectedIndex,
+      onDestinationSelected: (index) {
+        setState(() => _selectedIndex = _pageIndexForMobileTab(index));
+      },
+      destinations: [
+        NavigationDestination(
+          icon: const Icon(Icons.dashboard_outlined),
+          selectedIcon: const Icon(Icons.dashboard),
+          label: l10n.menuDashboard,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.people_outline),
+          selectedIcon: const Icon(Icons.people),
+          label: l10n.menuCustomers,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.assignment_outlined),
+          selectedIcon: const Icon(Icons.assignment),
+          label: l10n.menuOrders,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.straighten_outlined),
+          selectedIcon: const Icon(Icons.straighten),
+          label: l10n.menuMeasurements,
+        ),
+        NavigationDestination(
+          icon: const Icon(Icons.more_horiz),
+          label: l10n.menuMore,
+        ),
+      ],
+    );
+  }
+
+  String _getPageTitle(int index, AppLocalizations l10n) {
     switch (index) {
       case 0:
         return l10n.menuDashboard;
@@ -205,40 +252,47 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
       case 4:
         return l10n.menuInventory;
       case 5:
-        return l10n.menuReports;
+        return l10n.menuMeasurements;
       case 6:
-        return l10n.menuNotifications;
+        return l10n.menuReports;
       case 7:
-        return l10n.menuStaff;
+        return l10n.menuNotifications;
       case 8:
+        return l10n.menuStaff;
+      case 9:
         return l10n.menuSettings;
       default:
-        return '';
+        return l10n.appTitle;
     }
   }
 
   int get _mobileSelectedIndex {
-    if (_selectedIndex == 0) return 0;
-    if (_selectedIndex == 1) return 1;
-    if (_selectedIndex == 2) return 2;
-    if (_selectedIndex == 3) return 3;
-    return 4;
+    switch (_selectedIndex) {
+      case 0:
+        return 0;
+      case 1:
+        return 1;
+      case 2:
+        return 2;
+      case 5:
+        return 3; // Measurements
+      default:
+        return 4;
+    }
   }
 
   int _pageIndexForMobileTab(int tabIndex) {
-    return switch (tabIndex) {
-      0 => 0,
-      1 => 1,
-      2 => 2,
-      3 => 3,
-      _ => 4,
-    };
+    switch (tabIndex) {
+      case 0:
+        return 0;
+      case 1:
+        return 1;
+      case 2:
+        return 2;
+      case 3:
+        return 5; // Measurements
+      default:
+        return 4; // Inventory (more)
+    }
   }
-}
-
-class _Destination {
-  const _Destination(this.label, this.icon);
-
-  final String label;
-  final IconData icon;
 }

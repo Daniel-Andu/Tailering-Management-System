@@ -88,7 +88,12 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
                       Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: ChoiceChip(
-                          label: Text(status.replaceAll('_', ' ')),
+                          label: Text(
+                            OrderStatuses.displayLabel(
+                              status,
+                              locale: Localizations.localeOf(context).languageCode,
+                            ),
+                          ),
                           selected: _status == status,
                           onSelected: (_) => _setStatus(status),
                         ),
@@ -196,10 +201,10 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
+          child: SizedBox(
+            width: 600,
+            height: 700,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 // Header
                 Container(
@@ -266,20 +271,19 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
                           children: [
                             Expanded(
                               child: DropdownButtonFormField<String>(
-                                value: gender,
+                                initialValue: gender,
                                 decoration: InputDecoration(
                                   labelText: l10n.ordersGender,
                                   prefixIcon: const Icon(Icons.wc),
                                 ),
-                                items: const [
-                                  DropdownMenuItem(
-                                      value: 'male', child: Text('Male')),
-                                  DropdownMenuItem(
-                                      value: 'female', child: Text('Female')),
+                                items: [
+                                  DropdownMenuItem(value: 'male', child: Text(AppLocalizations.of(context)!.genderMale)),
+                                  DropdownMenuItem(value: 'female', child: Text(AppLocalizations.of(context)!.genderFemale)),
                                 ],
                                 onChanged: (value) {
-                                  if (value != null)
+                                  if (value != null) {
                                     setDialogState(() => gender = value);
+                                  }
                                 },
                               ),
                             ),
@@ -399,44 +403,36 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
                           children: [
                             Expanded(
                               child: DropdownButtonFormField<String>(
-                                value: priority,
+                                initialValue: priority,
                                 decoration: InputDecoration(
                                   labelText: l10n.ordersPriority,
                                   prefixIcon: const Icon(Icons.flag),
                                 ),
-                                items: const [
-                                  DropdownMenuItem(
-                                      value: 'low', child: Text('Low')),
-                                  DropdownMenuItem(
-                                      value: 'normal', child: Text('Normal')),
-                                  DropdownMenuItem(
-                                      value: 'high', child: Text('High')),
+                                items: [
+                                  DropdownMenuItem(value: 'low', child: Text(l10n.priorityLow)),
+                                  DropdownMenuItem(value: 'normal', child: Text(l10n.priorityNormal)),
+                                  DropdownMenuItem(value: 'high', child: Text(l10n.priorityHigh)),
                                 ],
                                 onChanged: (value) {
-                                  if (value != null)
-                                    setDialogState(() => priority = value);
+                                  if (value != null) setDialogState(() => priority = value);
                                 },
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: DropdownButtonFormField<String>(
-                                value: urgency,
+                                initialValue: urgency,
                                 decoration: InputDecoration(
                                   labelText: l10n.ordersUrgency,
                                   prefixIcon: const Icon(Icons.speed),
                                 ),
-                                items: const [
-                                  DropdownMenuItem(
-                                      value: 'normal', child: Text('Normal')),
-                                  DropdownMenuItem(
-                                      value: 'urgent', child: Text('Urgent')),
-                                  DropdownMenuItem(
-                                      value: 'express', child: Text('Express')),
+                                items: [
+                                  DropdownMenuItem(value: 'normal', child: Text(l10n.urgencyNormal)),
+                                  DropdownMenuItem(value: 'urgent', child: Text(l10n.urgencyUrgent)),
+                                  DropdownMenuItem(value: 'express', child: Text(l10n.urgencyExpress)),
                                 ],
                                 onChanged: (value) {
-                                  if (value != null)
-                                    setDialogState(() => urgency = value);
+                                  if (value != null) setDialogState(() => urgency = value);
                                 },
                               ),
                             ),
@@ -598,10 +594,9 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
     if (shouldSave != true || !mounted) return;
     final customerId = int.tryParse(customerIdController.text);
     final price = double.tryParse(priceController.text);
-    if (customerId == null || price == null) {
+    if (customerId == null || customerId <= 0 || price == null || price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Please enter valid Customer ID and Price')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseEnterValidCustomerId)),
       );
       return;
     }
@@ -628,7 +623,7 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Order created successfully')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.orderCreatedSuccess)),
         );
       }
     } catch (e) {
@@ -757,6 +752,7 @@ class _OrderCard extends StatelessWidget {
   }
 
   Future<void> _showPaymentDialog(BuildContext context, String balance) async {
+    final l10n = AppLocalizations.of(context)!;
     final amountController = TextEditingController(text: balance);
     final referenceController = TextEditingController();
     var method = PaymentMethods.cash;
@@ -765,28 +761,25 @@ class _OrderCard extends StatelessWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Record Payment'),
+          title: Text(l10n.recordPaymentTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: amountController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Amount'),
+                decoration: InputDecoration(labelText: l10n.paymentAmount),
               ),
               DropdownButtonFormField<String>(
-                value: method,
-                decoration: const InputDecoration(labelText: 'Payment method'),
-                items: const [
-                  DropdownMenuItem(value: 'cash', child: Text('Cash')),
-                  DropdownMenuItem(value: 'bank_transfer', child: Text('Bank')),
-                  DropdownMenuItem(value: 'telebirr', child: Text('Telebirr')),
-                  DropdownMenuItem(value: 'cbe_birr', child: Text('CBE Birr')),
-                  DropdownMenuItem(value: 'chapa', child: Text('Chapa')),
-                  DropdownMenuItem(
-                    value: 'mobile_money',
-                    child: Text('Mobile Money'),
-                  ),
+                initialValue: method,
+                decoration: InputDecoration(labelText: l10n.paymentMethod),
+                items: [
+                  DropdownMenuItem(value: 'cash', child: Text(l10n.paymentCash)),
+                  DropdownMenuItem(value: 'bank_transfer', child: Text(l10n.paymentBank)),
+                  DropdownMenuItem(value: 'telebirr', child: Text(l10n.paymentTelebirr)),
+                  DropdownMenuItem(value: 'cbe_birr', child: Text(l10n.paymentCbeBirr)),
+                  DropdownMenuItem(value: 'chapa', child: Text(l10n.paymentChapa)),
+                  DropdownMenuItem(value: 'mobile_money', child: Text(l10n.paymentMobileMoney)),
                 ],
                 onChanged: (value) {
                   if (value != null) setDialogState(() => method = value);
@@ -794,20 +787,18 @@ class _OrderCard extends StatelessWidget {
               ),
               TextField(
                 controller: referenceController,
-                decoration: const InputDecoration(
-                  labelText: 'Reference / transaction ID',
-                ),
+                decoration: InputDecoration(labelText: l10n.paymentReference),
               ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Save'),
+              child: Text(l10n.commonSave),
             ),
           ],
         ),

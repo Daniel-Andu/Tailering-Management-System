@@ -62,7 +62,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen>
               for (final status in OrderStatuses.values)
                 PopupMenuItem(
                   value: status,
-                  child: Text(status.replaceAll('_', ' ')),
+                  child: Text(
+                    OrderStatuses.displayLabel(
+                      status,
+                      locale: Localizations.localeOf(context).languageCode,
+                    ),
+                  ),
                 ),
             ],
           ),
@@ -145,19 +150,16 @@ class _OrderDetailScreenState extends State<OrderDetailScreen>
                 decoration: InputDecoration(labelText: l10n.orderDetailAmount),
               ),
               DropdownButtonFormField<String>(
-                value: method,
+                initialValue: method,
                 decoration:
                     InputDecoration(labelText: l10n.orderDetailPaymentMethod),
-                items: const [
-                  DropdownMenuItem(value: 'cash', child: Text('Cash')),
-                  DropdownMenuItem(value: 'bank_transfer', child: Text('Bank')),
-                  DropdownMenuItem(value: 'telebirr', child: Text('Telebirr')),
-                  DropdownMenuItem(value: 'cbe_birr', child: Text('CBE Birr')),
-                  DropdownMenuItem(value: 'chapa', child: Text('Chapa')),
-                  DropdownMenuItem(
-                    value: 'mobile_money',
-                    child: Text('Mobile Money'),
-                  ),
+                items: [
+                  DropdownMenuItem(value: 'cash', child: Text(l10n.paymentCash)),
+                  DropdownMenuItem(value: 'bank_transfer', child: Text(l10n.paymentBank)),
+                  DropdownMenuItem(value: 'telebirr', child: Text(l10n.paymentTelebirr)),
+                  DropdownMenuItem(value: 'cbe_birr', child: Text(l10n.paymentCbeBirr)),
+                  DropdownMenuItem(value: 'chapa', child: Text(l10n.paymentChapa)),
+                  DropdownMenuItem(value: 'mobile_money', child: Text(l10n.paymentMobileMoney)),
                 ],
                 onChanged: (value) {
                   if (value != null) setDialogState(() => method = value);
@@ -377,8 +379,9 @@ class _TimelineTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    if (history.isEmpty)
+    if (history.isEmpty) {
       return Center(child: Text(l10n.orderDetailNoTimelineYet));
+    }
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: history.length,
@@ -387,7 +390,12 @@ class _TimelineTab extends StatelessWidget {
         final item = history[index];
         return ListTile(
           leading: const Icon(Icons.timeline),
-          title: Text('${item['new_status']}'.replaceAll('_', ' ')),
+          title: Text(
+            OrderStatuses.displayLabel(
+              '${item['new_status']}',
+              locale: Localizations.localeOf(context).languageCode,
+            ),
+          ),
           subtitle: Text('${item['changed_at']}\n${item['notes'] ?? ''}'),
           isThreeLine: true,
         );
