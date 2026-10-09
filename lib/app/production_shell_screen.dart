@@ -149,7 +149,8 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
     );
   }
 
-  List<NavigationRailDestination> _buildRailDestinations(AppLocalizations l10n) {
+  List<NavigationRailDestination> _buildRailDestinations(
+      AppLocalizations l10n) {
     return [
       NavigationRailDestination(
         icon: const Icon(Icons.dashboard_outlined),
@@ -208,7 +209,11 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
     return NavigationBar(
       selectedIndex: _mobileSelectedIndex,
       onDestinationSelected: (index) {
-        setState(() => _selectedIndex = _pageIndexForMobileTab(index));
+        if (index == 4) {
+          _showMoreMenu(l10n);
+        } else {
+          setState(() => _selectedIndex = _pageIndexForMobileTab(index));
+        }
       },
       destinations: [
         NavigationDestination(
@@ -236,6 +241,94 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
           label: l10n.menuMore,
         ),
       ],
+    );
+  }
+
+  void _showMoreMenu(AppLocalizations l10n) {
+    final items = [
+      _MoreMenuItem(Icons.event_outlined, l10n.menuAppointments, 3),
+      _MoreMenuItem(Icons.inventory_2_outlined, l10n.menuInventory, 4),
+      _MoreMenuItem(Icons.bar_chart_outlined, l10n.menuReports, 6),
+      _MoreMenuItem(Icons.sms_outlined, l10n.menuNotifications, 7),
+      _MoreMenuItem(Icons.badge_outlined, l10n.menuStaff, 8),
+      _MoreMenuItem(Icons.settings_outlined, l10n.menuSettings, 9),
+    ];
+
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    l10n.menuMore,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ),
+                GridView.count(
+                  crossAxisCount: 3,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 1.1,
+                  children: items.map((item) {
+                    final selected = _selectedIndex == item.pageIndex;
+                    final colors = Theme.of(context).colorScheme;
+                    return Material(
+                      color: selected
+                          ? colors.secondaryContainer
+                          : colors.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(16),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          Navigator.pop(context);
+                          setState(() => _selectedIndex = item.pageIndex);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                item.icon,
+                                color: selected
+                                    ? colors.onSecondaryContainer
+                                    : colors.onSurfaceVariant,
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                item.label,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelMedium,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -295,4 +388,12 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
         return 4; // Inventory (more)
     }
   }
+}
+
+class _MoreMenuItem {
+  const _MoreMenuItem(this.icon, this.label, this.pageIndex);
+
+  final IconData icon;
+  final String label;
+  final int pageIndex;
 }

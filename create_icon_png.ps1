@@ -81,7 +81,7 @@ $threadPath.AddBezier(
 $g.DrawPath($threadPen, $threadPath)
 
 # Save
-$outPath = "c:\Users\Daniel\OneDrive\Desktop\Projects\Mobile app\TailoringManagementSystem\assets\images\app_icon.png"
+$outPath = Join-Path $PSScriptRoot "assets\images\app_icon.png"
 $bitmap.Save($outPath, [System.Drawing.Imaging.ImageFormat]::Png)
 
 $g.Dispose()

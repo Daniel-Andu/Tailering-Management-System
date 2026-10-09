@@ -133,11 +133,19 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
             builder: (context, scrollController) => Scaffold(
               backgroundColor: Colors.transparent,
               appBar: AppBar(
-                backgroundColor: Colors.transparent,
+                backgroundColor: Theme.of(context).colorScheme.surface,
+                foregroundColor: Theme.of(context).colorScheme.onSurface,
                 automaticallyImplyLeading: false,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back_rounded),
                   tooltip: 'Back to customers',
+                  style: IconButton.styleFrom(
+                    backgroundColor:
+                        Theme.of(context).colorScheme.primaryContainer,
+                    foregroundColor:
+                        Theme.of(context).colorScheme.onPrimaryContainer,
+                    shape: const CircleBorder(),
+                  ),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 title: const Text('Customer detail'),
@@ -694,6 +702,40 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
     if (parts.length == 1) return parts.first.characters.first.toUpperCase();
     return '${parts.first.characters.first}${parts.last.characters.first}'
         .toUpperCase();
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 96,
+            child: Text(
+              '$label:',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
