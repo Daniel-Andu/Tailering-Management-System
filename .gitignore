@@ -43,3 +43,176 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# =============================================================================
+# SECURITY & SENSITIVE DATA - NEVER COMMIT THESE
+# =============================================================================
+
+# Android Signing Keys & Keystores (CRITICAL - NEVER COMMIT)
+*.keystore
+*.jks
+key.properties
+android/key.properties
+android/app/key.properties
+release-signing-key.jks
+upload-keystore.jks
+app-signing-key.jks
+
+# Environment Variables & API Keys
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# License Keys & Activation Data
+license-keys/
+licenses/
+activation-data/
+customer-licenses/
+
+# Database Files (if any local databases with sensitive data)
+*.db
+*.sqlite
+*.sqlite3
+local_database/
+
+# Configuration Files with Secrets
+config/secrets/
+secrets/
+private_config/
+
+# =============================================================================
+# BUSINESS SENSITIVE FILES
+# =============================================================================
+
+# Customer Data & Business Information
+customer-data/
+business-data/
+sales-records/
+financial-data/
+
+# Build Outputs & Distribution Files
+*.apk
+*.aab
+*.ipa
+*.exe
+*.dmg
+*.zip
+releases/
+dist/
+distribution/
+
+# Logs & Debug Files
+*.log
+logs/
+debug/
+crash-reports/
+
+# =============================================================================
+# DEVELOPMENT & TEMPORARY FILES
+# =============================================================================
+
+# IDE & Editor Files
+.vscode/settings.json
+.vscode/launch.json
+*.swp
+*.swo
+*~
+
+# Temporary Development Files
+temp/
+tmp/
+temporary/
+scratch/
+notes/
+todo/
+
+# OS Generated Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.Spotlight-V100
+.Trashes
+._*
+
+# =============================================================================
+# FLUTTER/DART SPECIFIC
+# =============================================================================
+
+# Generated Files
+*.g.dart
+*.freezed.dart
+*.gr.dart
+lib/generated_plugin_registrant.dart
+
+# l10n Generated Files (keep source .arb files, ignore generated)
+lib/l10n/app_localizations*.dart
+!lib/l10n/*.arb
+
+# Flutter Version Management
+.fvm/
+
+# =============================================================================
+# PLATFORM SPECIFIC
+# =============================================================================
+
+# Android
+android/gradle.properties.backup
+android/local.properties
+android/gradle/wrapper/gradle-wrapper.properties.backup
+android/.gradle/
+android/captures/
+android/gradlew
+android/gradlew.bat
+
+# iOS
+ios/Podfile.lock
+ios/Pods/
+ios/Runner.xcworkspace/
+ios/Flutter/flutter_export_environment.sh
+
+# macOS
+macos/Podfile.lock
+macos/Pods/
+macos/Runner.xcworkspace/
+
+# Linux
+linux/flutter/generated_plugin_registrant.h
+linux/flutter/generated_plugin_registrant.cc
+
+# Windows
+windows/flutter/generated_plugin_registrant.h
+windows/flutter/generated_plugin_registrant.cc
+
+# Web
+web/manifest.json.backup
+
+# =============================================================================
+# ANALYSIS & TESTING
+# =============================================================================
+
+# Test Coverage
+coverage/
+test/coverage/
+lcov.info
+
+# Analysis
+analysis_options.yaml.backup
+
+# =============================================================================
+# DOCUMENTATION BUILDS
+# =============================================================================
+
+# Generated Documentation
+doc/api/
+docs/build/
+
+# =============================================================================
+# KIRO AI ASSISTANT FILES
+# =============================================================================
+
+# AI Assistant Generated Files
+.agents/
+.kiro/
