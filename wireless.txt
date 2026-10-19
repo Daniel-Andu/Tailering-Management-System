@@ -1,0 +1,9 @@
+
+
+
+cd %LOCALAPPDATA%\Android\Sdk\platform-tools
+
+adb connect 192.168.137
+
+cd C:\Projects\Tailer System\Tailering-Management-System
+2 accounts above this 

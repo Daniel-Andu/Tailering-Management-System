@@ -33,3 +33,21 @@ Run scripts from the project root directory:
 cd "C:\Projects\Tailer System\Tailering-Management-System"
 scripts\build_release_apk.bat
 ```
+
+
+## Asset Generation Scripts (Added)
+
+- `regenerate_splash_and_icons.bat` - Regenerate app icons and splash screen resources
+
+### Splash Screen & Icon Management
+
+To update app branding:
+```bash
+scripts\regenerate_splash_and_icons.bat
+```
+
+This regenerates:
+- Circular app launcher icons (all densities)
+- Adaptive icons for Android 8.0+
+- Unified splash screen (native + Flutter)
+- Web and Windows icons

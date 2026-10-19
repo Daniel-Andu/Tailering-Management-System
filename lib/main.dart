@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'database/database_factory_initializer.dart';
+import 'package:tailoring_system/core/database/sync_migration.dart';
+import 'package:tailoring_system/providers/auth_provider.dart';
+import 'package:tailoring_system/screens/auth/auth_router.dart';
 import 'package:tailoring_system/app/production_shell_screen.dart';
 import 'package:tailoring_system/providers/language_provider.dart';
 import 'package:tailoring_system/providers/customer_provider.dart';
@@ -30,7 +34,13 @@ import 'package:tailoring_system/l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  await Firebase.initializeApp();
+  
+  // Initialize local database
   initializeDatabaseFactory();
+  
   runApp(const TailoringSystemApp());
 }
 
@@ -41,6 +51,7 @@ class TailoringSystemApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
         ChangeNotifierProvider(create: (_) => CustomerProvider()),
         ChangeNotifierProvider(create: (_) => CustomerDirectoryProvider()),
@@ -422,8 +433,11 @@ class _AppInitializerState extends State<AppInitializer> {
   Future<void> _initializeApp() async {
     // Initialize database first with better error handling
     try {
-      await DatabaseHelper.instance.database;
+      final db = await DatabaseHelper.instance.database;
       print('Database initialized successfully');
+      
+      // Run sync migrations
+      await SyncMigration.runAllMigrations(db);
     } catch (e) {
       print('Database initialization error: $e');
       // Continue even if database fails - show error screen later
@@ -433,6 +447,21 @@ class _AppInitializerState extends State<AppInitializer> {
 
     if (!mounted) return;
 
+    // Check authentication status first
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    await authProvider.checkAuthStatus();
+
+    if (!mounted) return;
+
+    // If not authenticated, go to auth flow
+    if (!authProvider.isAuthenticated) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const AuthRouter()),
+      );
+      return;
+    }
+
+    // If authenticated, proceed with license check
     try {
       await LicenseManager.initializeTrial();
     } catch (e) {

@@ -1,13 +1,21 @@
 flutter_launcher_icons:
-  android: "ic_launcher"
-  ios: true
+  android: true
+  ios: false  # iOS folder doesn't exist - disable for now
   image_path: "assets/images/app_icon.png"
   min_sdk_android: 23
+  
+  # Android Adaptive Icons (API 26+)
+  adaptive_icon_background: "#000000"  # Black background for purple logo
+  adaptive_icon_foreground: "assets/images/app_icon.png"
+  
+  # Web Configuration
   web:
     generate: true
     image_path: "assets/images/app_icon.png"
-    background_color: "#8B5CF6"
-    theme_color: "#8B5CF6"
+    background_color: "#000000"
+    theme_color: "#6366F1"
+  
+  # Windows Configuration
   windows:
     generate: true
     image_path: "assets/images/app_icon.png"
