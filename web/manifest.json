@@ -3,12 +3,15 @@
     "short_name": "Tailoring System",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FFFFFF",
+    "background_color": "#000000",
     "theme_color": "#6366F1",
     "description": "Professional tailoring business management system for managing customers, orders, appointments, and inventory.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
-    "categories": ["business", "productivity"],
+    "categories": [
+        "business",
+        "productivity"
+    ],
     "screenshots": [
         {
             "src": "icons/Icon-192.png",

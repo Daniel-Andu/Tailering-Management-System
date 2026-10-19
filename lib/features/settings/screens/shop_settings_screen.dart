@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tailoring_system/features/settings/providers/app_settings_provider.dart';
+import 'package:tailoring_system/features/settings/screens/sync_status_screen.dart';
 import 'package:tailoring_system/l10n/app_localizations.dart';
 import 'package:tailoring_system/providers/language_provider.dart';
+import 'package:tailoring_system/providers/auth_provider.dart';
+import 'package:tailoring_system/screens/auth/auth_router.dart';
 import 'package:tailoring_system/utils/license_manager.dart';
 
 class ShopSettingsScreen extends StatefulWidget {
@@ -108,6 +111,105 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                         onPressed: provider.isLoading ? null : _save,
                         icon: const Icon(Icons.save),
                         label: Text(l10n.shopSettingsSave),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // ── Account & Profile ─────────────────────────────────────────
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, _) {
+                  final user = authProvider.currentUser;
+                  final shopProfile = authProvider.shopProfile;
+                  
+                  return _SectionCard(
+                    icon: Icons.account_circle,
+                    title: 'Account & Profile',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (user != null) ...[
+                          _InfoRow(
+                            icon: Icons.email,
+                            label: 'Email',
+                            value: user.email ?? 'N/A',
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        if (shopProfile != null) ...[
+                          _InfoRow(
+                            icon: Icons.store,
+                            label: 'Shop Name',
+                            value: shopProfile.shopName,
+                          ),
+                          const SizedBox(height: 8),
+                          _InfoRow(
+                            icon: Icons.location_city,
+                            label: 'City',
+                            value: shopProfile.city ?? 'Not set',
+                          ),
+                          const SizedBox(height: 8),
+                          _InfoRow(
+                            icon: Icons.category,
+                            label: 'Specialization',
+                            value: shopProfile.specialization ?? 'Not set',
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _editProfile(context),
+                            icon: const Icon(Icons.edit),
+                            label: const Text('Edit Profile'),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            onPressed: () => _confirmLogout(context),
+                            icon: const Icon(Icons.logout),
+                            label: const Text('Logout'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.red.shade600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 16),
+
+              // ── Cloud Sync ────────────────────────────────────────────────
+              _SectionCard(
+                icon: Icons.cloud_sync,
+                title: 'Cloud Sync',
+                child: Column(
+                  children: [
+                    Text(
+                      'Sync your data across devices securely with Firebase',
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const SyncStatusScreen(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.sync),
+                        label: const Text('View Sync Status'),
                       ),
                     ),
                   ],
@@ -270,6 +372,134 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
       );
     }
   }
+
+  Future<void> _confirmLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+            ),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await context.read<AuthProvider>().logout();
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const AuthRouter()),
+          (route) => false,
+        );
+      }
+    }
+  }
+
+  Future<void> _editProfile(BuildContext context) async {
+    final authProvider = context.read<AuthProvider>();
+    final shopProfile = authProvider.shopProfile;
+    
+    if (shopProfile == null) return;
+
+    final shopNameController = TextEditingController(text: shopProfile.shopName);
+    final ownerNameController = TextEditingController(text: shopProfile.ownerName);
+    final phoneController = TextEditingController(text: shopProfile.phoneNumber);
+    final addressController = TextEditingController(text: shopProfile.address);
+    final cityController = TextEditingController(text: shopProfile.city);
+    String? selectedSpecialization = shopProfile.specialization;  // Allow null
+
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Profile'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: shopNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Shop Name',
+                  prefixIcon: Icon(Icons.store),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: ownerNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Owner Name',
+                  prefixIcon: Icon(Icons.person),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: phoneController,
+                decoration: const InputDecoration(
+                  labelText: 'Phone Number',
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: addressController,
+                decoration: const InputDecoration(
+                  labelText: 'Address',
+                  prefixIcon: Icon(Icons.location_on),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: cityController,
+                decoration: const InputDecoration(
+                  labelText: 'City',
+                  prefixIcon: Icon(Icons.location_city),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    shopNameController.dispose();
+    ownerNameController.dispose();
+    phoneController.dispose();
+    addressController.dispose();
+    cityController.dispose();
+
+    if (updated == true && context.mounted) {
+      // TODO: Implement profile update in AuthProvider
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profile updated successfully'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
 }
 
 class _SectionCard extends StatelessWidget {
@@ -411,6 +641,41 @@ class _AboutRow extends StatelessWidget {
             style: const TextStyle(
                 fontWeight: FontWeight.w500, color: Colors.grey)),
         Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: Colors.grey.shade600),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.grey,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }

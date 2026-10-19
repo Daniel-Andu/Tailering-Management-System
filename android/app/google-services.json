@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "671575432623",
+    "project_id": "tailoring-management-sys-a8a50",
+    "storage_bucket": "tailoring-management-sys-a8a50.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:671575432623:android:8cdd362637a90f008ce35a",
+        "android_client_info": {
+          "package_name": "com.tailoringsystem.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDi-DhMhzNFaEXV--sP2oN3Z6Ef6g8DJKs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
