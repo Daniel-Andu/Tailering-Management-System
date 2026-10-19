@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:tailoring_system/app/production_shell_screen.dart';
 import 'package:tailoring_system/utils/license_manager.dart';
 import 'package:tailoring_system/l10n/app_localizations.dart';
+import 'package:tailoring_system/screens/pricing_screen.dart';
 
 class LicenseScreen extends StatefulWidget {
   const LicenseScreen({super.key});
@@ -13,80 +16,70 @@ class _LicenseScreenState extends State<LicenseScreen> {
   final _licenseKeyController = TextEditingController();
   final _companyNameController = TextEditingController();
   bool _isLoading = false;
-  String _licenseInfo = '';
+  int _trialDaysRemaining = 30;
+  bool _isLicensed = false;
   String _deviceId = '';
+  String _companyName = '';
 
   @override
   void initState() {
     super.initState();
-    _loadLicenseInfo();
     LicenseManager.initializeTrial();
-    _loadDeviceId();
+    _loadInfo();
   }
 
-  Future<void> _loadLicenseInfo() async {
-    final info = await LicenseManager.getLicenseInfo();
-    final companyName = await LicenseManager.getCompanyName();
-    setState(() {
-      _licenseInfo = info;
-      _companyNameController.text = companyName ?? '';
-    });
-  }
-
-  Future<void> _loadDeviceId() async {
+  Future<void> _loadInfo() async {
+    final daysRemaining = await LicenseManager.getTrialDaysRemaining();
     final deviceId = await LicenseManager.getDeviceId();
-    setState(() {
-      _deviceId = deviceId;
-    });
+    final companyName = await LicenseManager.getCompanyName();
+    final licensed = await LicenseManager.isLicensed();
+    if (mounted) {
+      setState(() {
+        _trialDaysRemaining = daysRemaining;
+        _deviceId = deviceId;
+        _companyName = companyName ?? '';
+        _isLicensed = licensed;
+        _companyNameController.text = companyName ?? '';
+      });
+    }
   }
 
   Future<void> _activateLicense() async {
+    final l10n = AppLocalizations.of(context)!;
     final key = _licenseKeyController.text.trim();
     final companyName = _companyNameController.text.trim();
 
     if (key.isEmpty) {
-      _showError('Please enter a license key');
+      _showSnack(l10n.licenseEnterKey, isError: true);
       return;
     }
-
     if (companyName.isEmpty) {
-      _showError('Please enter your company name');
+      _showSnack(l10n.licenseCompanyNameHint, isError: true);
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     final success = await LicenseManager.activateLicense(key, companyName);
-
-    setState(() {
-      _isLoading = false;
-    });
+    setState(() => _isLoading = false);
 
     if (success) {
-      _showSuccess('License activated successfully!');
-      await _loadLicenseInfo();
-      Navigator.of(context).pushReplacementNamed('/home');
+      _showSnack(l10n.licenseActivationSuccess);
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const ProductionShellScreen()),
+      );
     } else {
-      _showError('Invalid license key');
+      _showSnack(l10n.licenseInvalidKey, isError: true);
     }
   }
 
-  void _showError(String message) {
+  void _showSnack(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
+        backgroundColor: isError ? Colors.red.shade700 : Colors.green.shade700,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -94,212 +87,340 @@ class _LicenseScreenState extends State<LicenseScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.blue[50],
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.verified_user,
-                size: 80,
-                color: Colors.blue[900],
-              ),
-              const SizedBox(height: 24),
-              Text(
-                l10n.licenseActivate,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue[900],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.2),
-                      spreadRadius: 2,
-                      blurRadius: 5,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primary,
+              theme.colorScheme.secondary,
+              theme.colorScheme.tertiary,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  const SizedBox(height: 16),
+
+                  // ── Logo ─────────────────────────────────────────────────
+                  Center(
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: Colors.white.withOpacity(0.4), width: 2),
+                      ),
+                      child: const Icon(Icons.checkroom,
+                          size: 48, color: Colors.white),
                     ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      _licenseInfo,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[700],
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: Text(
+                      l10n.appTitle,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.orange[300]!),
-                ),
-                child: Column(
-                  children: [
-                    Row(
+                  ),
+                  const SizedBox(height: 4),
+                  Center(
+                    child: Text(
+                      l10n.appSubtitle,
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.8), fontSize: 13),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // ── Trial / License Status ────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    ),
+                    child: Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.orange[700]),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Your Device ID:',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange[900],
-                            ),
-                          ),
+                        Icon(
+                          _isLicensed
+                              ? Icons.verified_user
+                              : (_trialDaysRemaining > 5
+                                  ? Icons.timer
+                                  : Icons.warning_amber_rounded),
+                          color: _isLicensed
+                              ? Colors.greenAccent
+                              : (_trialDaysRemaining > 5
+                                  ? Colors.white
+                                  : Colors.orangeAccent),
+                          size: 36,
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.copy, size: 18),
-                          onPressed: () {
-                            // Copy device ID to clipboard
-                          },
-                          tooltip: 'Copy Device ID',
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _isLicensed
+                                    ? l10n.licenseFullLicense
+                                    : '${l10n.licenseTrialVersion} — $_trialDaysRemaining ${l10n.licenseDaysRemaining}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              if (_companyName.isNotEmpty)
+                                Text(
+                                  _companyName,
+                                  style: TextStyle(
+                                      color: Colors.white.withOpacity(0.75),
+                                      fontSize: 12),
+                                ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    SelectableText(
-                      _deviceId,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontFamily: 'monospace',
-                        color: Colors.grey[800],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Share this Device ID with the app provider to get your license key',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.orange[800],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _companyNameController,
-                decoration: InputDecoration(
-                  labelText: 'Company Name',
-                  hintText: 'Enter your tailoring business name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
                   ),
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _licenseKeyController,
-                decoration: InputDecoration(
-                  labelText: l10n.licenseEnterKey,
-                  hintText: 'TAILOR-XXXX-XXXX-XXXX',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  filled: true,
-                  fillColor: Colors.white,
-                ),
-                textCapitalization: TextCapitalization.characters,
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _activateLicense,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[900],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+
+                  const SizedBox(height: 20),
+
+                  // ── White Card ────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
                     ),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          l10n.licenseActivateButton,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.licenseActivate,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          l10n.licenseShareDeviceId,
+                          style: TextStyle(
+                              fontSize: 12, color: Colors.grey.shade500),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Device ID box
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: theme.colorScheme.outlineVariant),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.phone_android,
+                                  size: 16, color: theme.colorScheme.primary),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: SelectableText(
+                                  _deviceId,
+                                  style: const TextStyle(
+                                      fontSize: 11, fontFamily: 'monospace'),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.copy, size: 16),
+                                tooltip: l10n.licenseCopyDeviceId,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () async {
+                                  await Clipboard.setData(
+                                      ClipboardData(text: _deviceId));
+                                  if (!mounted) return;
+                                  _showSnack(l10n.licenseDeviceIdCopied);
+                                },
+                              ),
+                            ],
                           ),
                         ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextButton.icon(
-                onPressed: () async {
-                  final daysRemaining =
-                      await LicenseManager.getTrialDaysRemaining();
-                  if (daysRemaining > 0) {
-                    Navigator.of(context).pushReplacementNamed('/home');
-                  } else {
-                    _showError(l10n.licenseTrialExpired);
-                  }
-                },
-                icon: const Icon(Icons.play_arrow),
-                label: Text(
-                  l10n.licenseContinueTrial,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.blue[900],
+
+                        const SizedBox(height: 16),
+
+                        TextField(
+                          controller: _companyNameController,
+                          decoration: InputDecoration(
+                            labelText: l10n.licenseCompanyName,
+                            hintText: l10n.licenseCompanyNameHint,
+                            prefixIcon: const Icon(Icons.business),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        TextField(
+                          controller: _licenseKeyController,
+                          decoration: InputDecoration(
+                            labelText: l10n.licenseEnterKey,
+                            hintText: 'TAILOR-XXXX-XXXX-XXXX',
+                            prefixIcon: const Icon(Icons.vpn_key),
+                          ),
+                          textCapitalization: TextCapitalization.characters,
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: FilledButton.icon(
+                            onPressed: _isLoading ? null : _activateLicense,
+                            icon: _isLoading
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: Colors.white))
+                                : const Icon(Icons.verified_user),
+                            label: Text(l10n.licenseActivateButton,
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              if (_trialDaysRemaining > 0) {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const ProductionShellScreen()),
+                                );
+                              } else {
+                                _showSnack(
+                                    AppLocalizations.of(context)!
+                                        .licenseTrialExpired,
+                                    isError: true);
+                              }
+                            },
+                            icon: const Icon(Icons.play_arrow),
+                            label: Text(l10n.licenseContinueTrial),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // ── View Plans Button ─────────────────────────────
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const PricingScreen(),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.storefront),
+                            label: Text(l10n.pricingTitle,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
+                            style: TextButton.styleFrom(
+                              foregroundColor: theme.colorScheme.primary,
+                              backgroundColor:
+                                  theme.colorScheme.primary.withOpacity(0.08),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      l10n.licenseContact,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue[900],
-                      ),
+
+                  const SizedBox(height: 20),
+
+                  // ── Contact ───────────────────────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.licenseContactInfo,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue[900],
-                      ),
-                      textAlign: TextAlign.center,
+                    child: Column(
+                      children: [
+                        Text(
+                          l10n.businessContactTitle,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(l10n.businessPhone,
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 13)),
+                        Text(l10n.businessEmail,
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 13)),
+                        Text(l10n.businessTelegram,
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 13)),
+                        Text(l10n.businessTelebirr,
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 13)),
+                        Text(l10n.businessCbeBirr,
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 13)),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+
+                  const SizedBox(height: 32),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

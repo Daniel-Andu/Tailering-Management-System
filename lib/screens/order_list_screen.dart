@@ -6,8 +6,25 @@ import 'package:tailoring_system/models/order.dart';
 import 'package:tailoring_system/screens/add_order_screen.dart';
 import 'package:tailoring_system/l10n/app_localizations.dart';
 
-class OrderListScreen extends StatelessWidget {
+class OrderListScreen extends StatefulWidget {
   const OrderListScreen({super.key});
+
+  @override
+  State<OrderListScreen> createState() => _OrderListScreenState();
+}
+
+class _OrderListScreenState extends State<OrderListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+      final customerProvider =
+          Provider.of<CustomerProvider>(context, listen: false);
+      orderProvider.loadOrders();
+      customerProvider.loadCustomers();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +63,7 @@ class OrderListScreen extends StatelessWidget {
                   MaterialPageRoute(builder: (_) => const AddOrderScreen()),
                 );
               },
-              tooltip: 'Add Order',
+              tooltip: l10n.orderListAddOrder,
             ),
           ),
         ],
@@ -71,7 +88,7 @@ class OrderListScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No orders found',
+                    l10n.orderListNoOrders,
                     style: TextStyle(
                       fontSize: 18,
                       color: Colors.grey[600],
@@ -82,7 +99,7 @@ class OrderListScreen extends StatelessWidget {
                     onPressed: () {
                       orderProvider.loadOrders();
                     },
-                    child: const Text('Refresh'),
+                    child: Text(l10n.orderListRefresh),
                   ),
                 ],
               ),
@@ -93,8 +110,9 @@ class OrderListScreen extends StatelessWidget {
             itemCount: orders.length,
             itemBuilder: (context, index) {
               final order = orders[index];
-              final customer =
-                  customerProvider.getCustomerById(order.customerId ?? 0);
+              final customer = order.customerId != null && order.customerId! > 0
+                  ? customerProvider.getCustomerById(order.customerId!)
+                  : null;
               return _buildOrderCard(
                   context, order, customer, orderProvider, l10n);
             },
@@ -126,73 +144,7 @@ class OrderListScreen extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: statusColor,
-          child: const Icon(
-            Icons.shopping_bag,
-            color: Colors.white,
-          ),
-        ),
-        title: Text(
-          order.clothType,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${l10n.orderListCustomer}: ${customer?.name ?? 'Unknown'}',
-              style: const TextStyle(),
-            ),
-            Text(
-              '${l10n.orderListPrice}: \$${order.price.toStringAsFixed(2)}',
-              style: const TextStyle(),
-            ),
-            if (order.paymentStatus != null)
-              Text(
-                'Payment Status: ${order.paymentStatus}',
-                style: TextStyle(
-                  color: order.paymentStatus == 'Paid'
-                      ? Colors.green
-                      : Colors.orange,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            if (order.paymentMethod != null)
-              Text(
-                'Payment Method: ${order.paymentMethod}',
-                style: const TextStyle(),
-              ),
-          ],
-        ),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                order.status,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: statusColor,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              onPressed: () {
-                _showDeleteDialog(context, order, provider, l10n);
-              },
-            ),
-          ],
-        ),
+      child: InkWell(
         onTap: () {
           Navigator.push(
             context,
@@ -201,6 +153,85 @@ class OrderListScreen extends StatelessWidget {
             ),
           );
         },
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: statusColor,
+                    child: const Icon(
+                      Icons.shopping_bag,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      order.clothType,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      order.status,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${l10n.orderListCustomer}: ${customer?.name ?? 'Unknown'}',
+                style: const TextStyle(),
+              ),
+              Text(
+                '${l10n.orderListPrice}: \$${order.price.toStringAsFixed(2)}',
+                style: const TextStyle(),
+              ),
+              if (order.paymentStatus != null)
+                Text(
+                  '${l10n.orderListPaymentStatus}: ${order.paymentStatus}',
+                  style: TextStyle(
+                    color: order.paymentStatus == 'Paid'
+                        ? Colors.green
+                        : Colors.orange,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              if (order.paymentMethod != null)
+                Text(
+                  '${l10n.orderListPaymentMethod}: ${order.paymentMethod}',
+                  style: const TextStyle(),
+                ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () {
+                      _showDeleteDialog(context, order, provider, l10n);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

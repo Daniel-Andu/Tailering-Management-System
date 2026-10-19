@@ -57,6 +57,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get menuMore => 'More';
 
   @override
+  String get menuMeasurements => 'Measurements';
+
+  @override
   String get dashboardTitle => 'Dashboard';
 
   @override
@@ -96,7 +99,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardRevenueSummary => 'Revenue Summary';
 
   @override
-  String get dashboardTotalRevenueCompleted => 'Total Revenue from Completed Orders';
+  String get dashboardTotalRevenueCompleted =>
+      'Total Revenue from Completed Orders';
 
   @override
   String get dashboardManageCustomers => 'Manage Customers';
@@ -141,7 +145,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customerFormNameRequired => 'Name is required';
 
   @override
-  String get customerFormMeasurementsValid => 'Measurements must be valid numbers';
+  String get customerFormMeasurementsValid =>
+      'Measurements must be valid numbers';
 
   @override
   String get customerFormSuccess => 'Customer saved successfully';
@@ -180,7 +185,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get customerListConfirmDelete => 'Confirm Delete';
 
   @override
-  String get customerListDeleteMessage => 'Are you sure you want to delete this customer';
+  String get customerListDeleteMessage =>
+      'Are you sure you want to delete this customer';
 
   @override
   String get alertWarning => 'Warning';
@@ -222,6 +228,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderFormStatus => 'Status';
 
   @override
+  String get orderFormEditTitle => 'Edit Order';
+
+  @override
+  String get orderFormCustomerRequired => 'Customer is required';
+
+  @override
+  String get orderFormClothTypeRequired => 'Cloth type is required';
+
+  @override
+  String get orderFormPriceRequired => 'Price is required';
+
+  @override
+  String get orderFormNotes => 'Notes';
+
+  @override
+  String get orderFormPaymentMethod => 'Payment Method';
+
+  @override
+  String get orderFormTransactionId => 'Transaction ID';
+
+  @override
+  String get orderFormPaymentStatus => 'Payment Status';
+
+  @override
+  String get orderFormAddedMessage => 'Order added successfully';
+
+  @override
+  String get orderFormUpdatedMessage => 'Order updated successfully';
+
+  @override
   String get orderListTitle => 'Order Management';
 
   @override
@@ -238,6 +274,120 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orderListRefresh => 'Refresh';
+
+  @override
+  String get appointmentScreenTitle => 'Appointments';
+
+  @override
+  String get appointmentPickDayTooltip => 'Pick a day';
+
+  @override
+  String get appointmentNew => 'New Appointment';
+
+  @override
+  String get appointmentNoAppointments => 'No appointments found';
+
+  @override
+  String get appointmentDialogTitle => 'Create Appointment';
+
+  @override
+  String get appointmentCustomerId => 'Customer ID';
+
+  @override
+  String get appointmentOrderIdOptional => 'Order ID (optional)';
+
+  @override
+  String get appointmentType => 'Appointment Type';
+
+  @override
+  String get appointmentScheduledTime => 'Scheduled Time';
+
+  @override
+  String get appointmentTitle => 'Appointments';
+
+  @override
+  String get appointmentAdd => 'Add Appointment';
+
+  @override
+  String get appointmentEdit => 'Edit Appointment';
+
+  @override
+  String get appointmentDate => 'Date';
+
+  @override
+  String get appointmentTime => 'Time';
+
+  @override
+  String get appointmentCustomer => 'Customer';
+
+  @override
+  String get appointmentNotes => 'Notes';
+
+  @override
+  String get appointmentSave => 'Save';
+
+  @override
+  String get appointmentCancel => 'Cancel';
+
+  @override
+  String get appointmentAddedMessage => 'Appointment added successfully';
+
+  @override
+  String get appointmentUpdatedMessage => 'Appointment updated successfully';
+
+  @override
+  String get inventoryRefresh => 'Refresh';
+
+  @override
+  String get inventoryNewItem => 'New Item';
+
+  @override
+  String get inventoryNoItems => 'No inventory items available';
+
+  @override
+  String get inventoryDialogTitle => 'Add Inventory Item';
+
+  @override
+  String get inventoryCategory => 'Category';
+
+  @override
+  String get inventoryUnit => 'Unit';
+
+  @override
+  String get inventoryReorderLevel => 'Reorder Level';
+
+  @override
+  String get inventoryTitle => 'Inventory';
+
+  @override
+  String get inventoryAddItem => 'Add Item';
+
+  @override
+  String get inventoryEditItem => 'Edit Item';
+
+  @override
+  String get inventoryName => 'Name';
+
+  @override
+  String get inventoryQuantity => 'Quantity';
+
+  @override
+  String get inventoryPrice => 'Price';
+
+  @override
+  String get inventoryNotes => 'Notes';
+
+  @override
+  String get inventorySave => 'Save';
+
+  @override
+  String get inventoryCancel => 'Cancel';
+
+  @override
+  String get inventoryAddedMessage => 'Item added successfully';
+
+  @override
+  String get inventoryUpdatedMessage => 'Item updated successfully';
 
   @override
   String get orderListFilterByStatus => 'Filter by Status';
@@ -267,6 +417,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderListPrice => 'Price';
 
   @override
+  String get orderListPaymentStatus => 'Payment Status';
+
+  @override
+  String get orderListPaymentMethod => 'Payment Method';
+
+  @override
+  String get orderListNoOrders => 'No orders found';
+
+  @override
   String get orderListStatus => 'Status';
 
   @override
@@ -294,7 +453,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderListConfirmDeleteHeader => 'Delete Order Confirmation';
 
   @override
-  String get orderListDeleteConfirmation => 'Are you sure you want to delete this order';
+  String get orderListDeleteConfirmation =>
+      'Are you sure you want to delete this order';
 
   @override
   String get orderListOrderDeleted => 'Order deleted';
@@ -387,7 +547,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseContact => 'Need a license? Contact us';
 
   @override
-  String get licenseContactInfo => 'Email: your-email@example.com\nPhone: +XXX-XXX-XXX';
+  String get licenseContactInfo =>
+      'Email: your-email@example.com\nPhone: +XXX-XXX-XXX';
 
   @override
   String get licenseInvalidKey => 'Invalid license key';
@@ -396,7 +557,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get licenseActivationSuccess => 'License activated successfully';
 
   @override
-  String get licenseLicenseRequired => 'License required to use this application';
+  String get licenseLicenseRequired =>
+      'License required to use this application';
 
   @override
   String get companyName => 'Company Name';
@@ -757,4 +919,278 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orderDetailNoMessagesQueued => 'No messages queued';
+
+  @override
+  String get measurementsTitle => 'Measurements';
+  @override
+  String get measurementsTemplates => 'Templates';
+  @override
+  String get measurementsCustomFields => 'Custom Fields';
+  @override
+  String get measurementsClothTypes => 'Cloth Types';
+  @override
+  String get measurementsSelectClothType => 'Select a cloth type';
+  @override
+  String get measurementsSelectTemplate => 'Select a template to view fields';
+  @override
+  String get measurementsFields => 'Measurement Fields';
+  @override
+  String get measurementsAddCustomField => 'Add Custom Field';
+  @override
+  String get measurementsEditCustomField => 'Edit Custom Field';
+  @override
+  String get measurementsFieldName => 'Field Name';
+  @override
+  String get measurementsFieldNameHint => 'e.g. Arm Round, Thigh, Back Length';
+  @override
+  String get measurementsUnit => 'Unit';
+  @override
+  String get measurementsUnitHint => 'cm / inch';
+  @override
+  String get measurementsNoCustomFields => 'No custom fields yet';
+  @override
+  String get measurementsNoCustomFieldsHint => 'Tap + to add custom measurement fields';
+  @override
+  String get measurementsDeleteField => 'Delete Field';
+  @override
+  String get measurementsDeleteFieldConfirm => 'Are you sure you want to delete this custom measurement field?';
+  @override
+  String get measurementsCustomFieldInfo => 'Add your own custom measurement fields here. They will appear alongside standard measurements when creating orders.';
+
+  @override
+  String get dashboardDueToday => 'Due Today';
+  @override
+  String get dashboardDelayed => 'Delayed';
+  @override
+  String get dashboardReady => 'Ready';
+  @override
+  String get dashboardOpenOrders => 'Open Orders';
+  @override
+  String get dashboardCustomers => 'Customers';
+  @override
+  String get dashboardUnpaid => 'Unpaid';
+  @override
+  String get dashboardTodayPaid => 'Today Paid';
+  @override
+  String get dashboardMonthPaid => 'Month Paid';
+  @override
+  String get dashboardDueSoon => 'Due Soon';
+  @override
+  String get dashboardUnpaidBalances => 'Unpaid Balances';
+  @override
+  String get dashboardNoRecords => 'No records';
+
+  @override
+  String get licenseYourDeviceId => 'Your Device ID:';
+  @override
+  String get licenseCopyDeviceId => 'Copy Device ID';
+  @override
+  String get licenseDeviceIdCopied => 'Device ID copied';
+  @override
+  String get licenseShareDeviceId => 'Share this Device ID with the app provider to get your license key';
+  @override
+  String get licenseCompanyName => 'Company Name';
+  @override
+  String get licenseCompanyNameHint => 'Enter your tailoring business name';
+  @override
+  String get licenseFullLicense => 'Full License';
+  @override
+  String get licenseTrialVersion => 'Trial Version';
+  @override
+  String get licenseDaysRemaining => 'Days Remaining';
+  @override
+  String get licenseStatus => 'Status';
+  @override
+  String get licenseActive => 'Active';
+  @override
+  String get licenseExpired => 'Expired';
+  @override
+  String get licenseDeviceMismatch => 'Device Mismatch';
+  @override
+  String get licenseType => 'License Type';
+  @override
+  String get licenseCompany => 'Company';
+  @override
+  String get licenseDeviceId => 'Device ID';
+
+  @override
+  String get appointmentDetails => 'Appointment Details';
+  @override
+  String get appointmentAdditionalNotes => 'Additional Notes';
+
+  @override
+  String get settingsLanguage => 'Language';
+  @override
+  String get settingsEnglish => 'English';
+  @override
+  String get settingsAmharic => 'Amharic (አማርኛ)';
+  @override
+  String get settingsTheme => 'Theme';
+  @override
+  String get settingsAbout => 'About';
+  @override
+  String get settingsVersion => 'Version';
+
+  @override
+  String get commonETB => 'ETB';
+
+  @override
+  String get businessContactTitle => 'Get a License';
+  @override
+  String get businessContactBody => 'Contact us to purchase a license for your tailoring business.';
+  @override
+  String get businessPhone => '📞 +251-XXX-XXX-XXXX';
+  @override
+  String get businessEmail => '📧 tailorsystem@example.com';
+  @override
+  String get businessTelegram => '💬 t.me/tailorsystem';
+
+  // ── Common (additional) ────────────────────────────────────────────────
+  @override
+  String get commonCancel => 'Cancel';
+  @override
+  String get commonSave => 'Save';
+  @override
+  String get commonDelete => 'Delete';
+  @override
+  String get commonEdit => 'Edit';
+  @override
+  String get commonAdd => 'Add';
+  @override
+  String get commonClose => 'Close';
+  @override
+  String get commonOk => 'OK';
+  @override
+  String get commonYes => 'Yes';
+  @override
+  String get commonNo => 'No';
+  @override
+  String get commonBack => 'Back';
+  @override
+  String get commonNext => 'Next';
+  @override
+  String get commonPrevious => 'Previous';
+  @override
+  String get commonSubmit => 'Submit';
+  @override
+  String get commonRefresh => 'Refresh';
+  @override
+  String get commonSearch => 'Search';
+  @override
+  String get commonFilter => 'Filter';
+  @override
+  String get commonSort => 'Sort';
+  @override
+  String get commonExport => 'Export';
+  @override
+  String get commonImport => 'Import';
+  @override
+  String get commonPrint => 'Print';
+  @override
+  String get commonDownload => 'Download';
+  @override
+  String get commonUpload => 'Upload';
+  @override
+  String get commonSelectAll => 'Select All';
+  @override
+  String get commonDeselectAll => 'Deselect All';
+
+  @override
+  String get formRequired => 'This field is required';
+  @override
+  String get formInvalidEmail => 'Please enter a valid email';
+  @override
+  String get formInvalidPhone => 'Please enter a valid phone number';
+  @override
+  String get formInvalidNumber => 'Please enter a valid number';
+
+  // ── New localized values ──────────────────────────────────────────────────
+  @override
+  String get genderMale => 'Male';
+  @override
+  String get genderFemale => 'Female';
+  @override
+  String get priorityLow => 'Low';
+  @override
+  String get priorityNormal => 'Normal';
+  @override
+  String get priorityHigh => 'High';
+  @override
+  String get urgencyNormal => 'Normal';
+  @override
+  String get urgencyUrgent => 'Urgent';
+  @override
+  String get urgencyExpress => 'Express';
+  @override
+  String get paymentCash => 'Cash';
+  @override
+  String get paymentBank => 'Bank';
+  @override
+  String get paymentTelebirr => 'Telebirr';
+  @override
+  String get paymentCbeBirr => 'CBE Birr';
+  @override
+  String get paymentChapa => 'Chapa';
+  @override
+  String get paymentMobileMoney => 'Mobile Money';
+  @override
+  String get recordPaymentTitle => 'Record Payment';
+  @override
+  String get paymentAmount => 'Amount';
+  @override
+  String get paymentMethod => 'Payment method';
+  @override
+  String get paymentReference => 'Reference / transaction ID';
+  @override
+  String get orderCreatedSuccess => 'Order created successfully';
+  @override
+  String get noCustomersFound => 'No customers found';
+  @override
+  String get pleaseSelectCustomer => 'Please select a customer';
+  @override
+  String get pleaseEnterValidCustomerId => 'Please enter a valid Customer ID and Price';
+
+  // ── Monetization ─────────────────────────────────────────────────────────
+  @override
+  String get businessTelebirr => '💳 TeleBirr: +251-912-345-678';
+  @override
+  String get businessCbeBirr => '🏦 CBE Birr: 1000123456789';
+  @override
+  String get pricingTitle => 'Choose Your Plan';
+  @override
+  String get pricingBasic => 'Basic';
+  @override
+  String get pricingPro => 'Professional';
+  @override
+  String get pricingEnterprise => 'Enterprise';
+  @override
+  String get pricingBasicPrice => '500 ETB / year';
+  @override
+  String get pricingProPrice => '1,200 ETB / year';
+  @override
+  String get pricingEnterprisePrice => '2,500 ETB / year';
+  @override
+  String get pricingBasicDesc => '1 device • Customers & Orders • Basic reports';
+  @override
+  String get pricingProDesc => 'All features • Staff • Inventory • Financial reports';
+  @override
+  String get pricingEnterpriseDesc => '2 devices • All Pro features • 1 year updates & support';
+  @override
+  String get pricingBuyNow => 'Buy This Plan';
+  @override
+  String get pricingPopular => 'Most Popular';
+  @override
+  String get paymentInstructionsTitle => 'How to Pay';
+  @override
+  String get paymentStep1 => '1. Choose a plan and note the price';
+  @override
+  String get paymentStep2 => '2. Send payment via TeleBirr or CBE Birr';
+  @override
+  String get paymentStep3 => '3. Copy your Device ID + payment screenshot → send to our Telegram';
+  @override
+  String get paymentStep4 => '4. Receive your license key within 24 hours';
+  @override
+  String get paymentStep5 => '5. Enter the key here and tap Activate';
+  @override
+  String get shareOnTelegram => 'Open Telegram to Send';
 }

@@ -13,6 +13,7 @@ class MeasurementProvider extends ChangeNotifier {
   List<Map<String, Object?>> _templates = [];
   List<Map<String, Object?>> _fields = [];
   List<Map<String, Object?>> _customerMeasurements = [];
+  List<Map<String, Object?>> _customFields = [];
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -21,10 +22,13 @@ class MeasurementProvider extends ChangeNotifier {
   List<Map<String, Object?>> get fields => List.unmodifiable(_fields);
   List<Map<String, Object?>> get customerMeasurements =>
       List.unmodifiable(_customerMeasurements);
+  List<Map<String, Object?>> get customFields =>
+      List.unmodifiable(_customFields);
 
   Future<void> loadClothTypes() async {
     await _run(() async {
       _clothTypes = await _repository.clothTypes();
+      _customFields = await _repository.getCustomFields();
     });
   }
 
@@ -42,7 +46,8 @@ class MeasurementProvider extends ChangeNotifier {
 
   Future<void> loadMeasurementsForCustomer(int customerId) async {
     await _run(() async {
-      _customerMeasurements = await _repository.measurementsForCustomer(customerId);
+      _customerMeasurements =
+          await _repository.measurementsForCustomer(customerId);
     });
   }
 
@@ -61,7 +66,44 @@ class MeasurementProvider extends ChangeNotifier {
         title: title,
         notes: notes,
       );
-      _customerMeasurements = await _repository.measurementsForCustomer(customerId);
+      _customerMeasurements =
+          await _repository.measurementsForCustomer(customerId);
+    });
+  }
+
+  // ── Custom fields management ───────────────────────────────────────────────
+
+  Future<void> loadCustomFields() async {
+    await _run(() async {
+      _customFields = await _repository.getCustomFields();
+    });
+  }
+
+  Future<void> addCustomField({
+    required String label,
+    String unit = 'cm',
+  }) async {
+    await _run(() async {
+      await _repository.addCustomField(label: label, unit: unit);
+      _customFields = await _repository.getCustomFields();
+    });
+  }
+
+  Future<void> updateCustomField({
+    required int id,
+    required String label,
+    required String unit,
+  }) async {
+    await _run(() async {
+      await _repository.updateCustomField(id: id, label: label, unit: unit);
+      _customFields = await _repository.getCustomFields();
+    });
+  }
+
+  Future<void> deleteCustomField(int id) async {
+    await _run(() async {
+      await _repository.deleteCustomField(id);
+      _customFields = await _repository.getCustomFields();
     });
   }
 

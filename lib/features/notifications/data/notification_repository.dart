@@ -3,7 +3,7 @@ import 'package:tailoring_system/utils/database_helper.dart';
 
 class NotificationRepository {
   NotificationRepository({SmsGateway? smsGateway})
-      : _smsGateway = smsGateway ?? DisabledSmsGateway();
+      : _smsGateway = smsGateway ?? AndroidSmsGateway();
 
   final SmsGateway _smsGateway;
 

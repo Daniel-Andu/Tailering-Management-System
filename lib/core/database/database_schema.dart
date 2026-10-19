@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 
 class DatabaseSchema {
-  static const int version = 8;
+  static const int version = 10;
 
   static Future<void> createAll(Database db) async {
     await _createCustomers(db);
@@ -96,6 +96,30 @@ class DatabaseSchema {
       await _addColumnIfMissing(db, 'orders', 'sleeve', 'REAL');
       await _addColumnIfMissing(db, 'orders', 'neck', 'REAL');
       await _addColumnIfMissing(db, 'orders', 'cloth_photo', 'TEXT');
+    }
+    if (oldVersion < 9) {
+      // Soft-delete any orders that were accidentally created with no valid
+      // customer (customerId IS NULL or 0). These appear as "Customer 0" in
+      // the UI and are invalid data artifacts.
+      final now = DateTime.now().toIso8601String();
+      await db.execute('''
+        UPDATE orders
+        SET deleted_at = '$now', updated_at = '$now'
+        WHERE (customerId IS NULL OR customerId = 0)
+          AND deleted_at IS NULL
+      ''');
+    }
+    if (oldVersion < 10) {
+      // Add custom_measurement_fields table for tailor-defined extra measurements
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS custom_measurement_fields (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          label TEXT NOT NULL,
+          unit TEXT NOT NULL DEFAULT 'cm',
+          sort_order INTEGER NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL
+        )
+      ''');
     }
   }
 
@@ -434,6 +458,17 @@ class DatabaseSchema {
         key TEXT PRIMARY KEY,
         value TEXT,
         updated_at TEXT NOT NULL
+      )
+    ''');
+
+    // Tailor-defined custom measurement fields (extra beyond standard ones)
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS custom_measurement_fields (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        label TEXT NOT NULL,
+        unit TEXT NOT NULL DEFAULT 'cm',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL
       )
     ''');
   }
