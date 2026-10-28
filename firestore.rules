@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Tailors collection - user must be authenticated and accessing their own data
+    match /tailors/{tailorId} {
+      allow read, write: if request.auth != null && request.auth.uid == tailorId;
+      
+      // Subcollections under tailors
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == tailorId;
+      }
+    }
+    
+    // OTP codes collection - special rules for email verification
+    match /otp_codes/{email} {
+      // Allow anyone to CREATE an OTP (needed for registration before auth)
+      allow create: if true;
+      
+      // Allow anyone to READ and UPDATE their own OTP by email
+      // This allows verification before authentication
+      allow read, update: if true;
+      
+      // Allow deletion (for cleanup)
+      allow delete: if true;
+    }
+    
+    // Test collection for connectivity checks
+    match /_test/{document} {
+      allow read: if true;
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tailoring_system/providers/auth_provider.dart';
+import 'package:tailoring_system/screens/auth/otp_verification_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -35,26 +36,70 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.register(
+    
+    // Send OTP first before creating account
+    print('📧 Sending OTP to: ${_emailController.text.trim()}');
+    final otpResult = await authProvider.sendOtpVerification(
       _emailController.text.trim(),
-      _passwordController.text,
-      _shopNameController.text.trim(),
       _ownerNameController.text.trim(),
-      _phoneController.text.trim(),
     );
 
     if (!mounted) return;
 
-    if (success) {
-      Navigator.pop(context); // Return to login or go to onboarding
-    } else if (authProvider.errorMessage != null) {
+    if (!otpResult['success']) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.errorMessage!),
+          content: Text(otpResult['message']),
           backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
         ),
       );
+      return;
     }
+
+    // Navigate to OTP verification screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OtpVerificationScreen(
+          email: _emailController.text.trim(),
+          recipientName: _ownerNameController.text.trim(),
+          onVerified: () async {
+            // Email verified! Now create the account
+            final success = await authProvider.register(
+              _emailController.text.trim(),
+              _passwordController.text,
+              _shopNameController.text.trim(),
+              _ownerNameController.text.trim(),
+              _phoneController.text.trim(),
+            );
+
+            if (!mounted) return;
+
+            if (success) {
+              // Success! Navigate back to login/home
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('✅ Registration complete! Welcome aboard.'),
+                  backgroundColor: Colors.green,
+                  duration: Duration(seconds: 3),
+                ),
+              );
+            } else if (authProvider.errorMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(authProvider.errorMessage!),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 4),
+                ),
+              );
+            }
+          },
+        ),
+      ),
+    );
   }
 
   @override
@@ -62,7 +107,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -76,20 +121,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Title
-                const Text(
+                Text(
                   'Register Your Tailor Shop',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F2937),
+                    color: Theme.of(context).textTheme.displayMedium?.color,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Create an account to start managing your business',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Color(0xFF6B7280),
+                    color: Theme.of(context).textTheme.bodyLarge?.color?.withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -210,7 +255,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Text(
                   'By registering, you agree to our Terms of Service and Privacy Policy',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).textTheme.bodySmall?.color,
+                  ),
                 ),
               ],
             ),
