@@ -10,6 +10,8 @@ import 'package:tailoring_system/features/orders/screens/order_board_screen.dart
 import 'package:tailoring_system/features/reports/screens/financial_reports_screen.dart';
 import 'package:tailoring_system/features/settings/screens/shop_settings_screen.dart';
 import 'package:tailoring_system/features/staff/screens/staff_screen.dart';
+import 'package:tailoring_system/features/profile/screens/profile_screen.dart';
+import 'package:tailoring_system/widgets/app_drawer.dart';
 import 'package:tailoring_system/providers/language_provider.dart';
 import 'package:tailoring_system/l10n/app_localizations.dart';
 
@@ -24,16 +26,17 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
   int _selectedIndex = 0;
 
   static const _pages = [
-    ProductionDashboardScreen(),
-    CustomerDirectoryScreen(),
-    OrderBoardScreen(),
-    AppointmentsScreen(),
-    InventoryScreen(),
-    MeasurementsScreen(),
-    FinancialReportsScreen(),
-    NotificationsScreen(),
-    StaffScreen(),
-    ShopSettingsScreen(),
+    ProductionDashboardScreen(),     // 0
+    CustomerDirectoryScreen(),       // 1
+    OrderBoardScreen(),              // 2
+    AppointmentsScreen(),            // 3
+    InventoryScreen(),               // 4
+    MeasurementsScreen(),            // 5
+    FinancialReportsScreen(),        // 6
+    NotificationsScreen(),           // 7
+    StaffScreen(),                   // 8
+    ShopSettingsScreen(),            // 9
+    ProfileScreen(),                 // 10 - NEW Profile screen
   ];
 
   @override
@@ -49,6 +52,12 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
         if (wide) {
           return Scaffold(
             appBar: _buildAppBar(context, l10n, languageProvider),
+            drawer: !extended ? AppDrawer(
+              selectedIndex: _selectedIndex,
+              onItemSelected: (index) {
+                setState(() => _selectedIndex = index);
+              },
+            ) : null,
             body: Row(
               children: [
                 NavigationRail(
@@ -98,6 +107,12 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
 
         return Scaffold(
           appBar: _buildAppBar(context, l10n, languageProvider),
+          drawer: AppDrawer(
+            selectedIndex: _selectedIndex,
+            onItemSelected: (index) {
+              setState(() => _selectedIndex = index);
+            },
+          ),
           body: _pages[_selectedIndex],
           bottomNavigationBar: _buildBottomNav(l10n),
         );
@@ -115,11 +130,18 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
           Text(_getPageTitle(_selectedIndex, l10n)),
         ],
       ),
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+          tooltip: 'Menu',
+        ),
+      ),
       actions: [
         Padding(
           padding: const EdgeInsets.only(right: 8),
           child: Material(
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(12),
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
@@ -209,11 +231,7 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
     return NavigationBar(
       selectedIndex: _mobileSelectedIndex,
       onDestinationSelected: (index) {
-        if (index == 4) {
-          _showMoreMenu(l10n);
-        } else {
-          setState(() => _selectedIndex = _pageIndexForMobileTab(index));
-        }
+        setState(() => _selectedIndex = _pageIndexForMobileTab(index));
       },
       destinations: [
         NavigationDestination(
@@ -234,101 +252,14 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
         NavigationDestination(
           icon: const Icon(Icons.straighten_outlined),
           selectedIcon: const Icon(Icons.straighten),
-          label: l10n.menuMeasurements,
+          label: 'Measure',
         ),
         NavigationDestination(
-          icon: const Icon(Icons.more_horiz),
-          label: l10n.menuMore,
+          icon: const Icon(Icons.person_outline),
+          selectedIcon: const Icon(Icons.person),
+          label: 'Profile', // TODO: Add to l10n
         ),
       ],
-    );
-  }
-
-  void _showMoreMenu(AppLocalizations l10n) {
-    final items = [
-      _MoreMenuItem(Icons.event_outlined, l10n.menuAppointments, 3),
-      _MoreMenuItem(Icons.inventory_2_outlined, l10n.menuInventory, 4),
-      _MoreMenuItem(Icons.bar_chart_outlined, l10n.menuReports, 6),
-      _MoreMenuItem(Icons.sms_outlined, l10n.menuNotifications, 7),
-      _MoreMenuItem(Icons.badge_outlined, l10n.menuStaff, 8),
-      _MoreMenuItem(Icons.settings_outlined, l10n.menuSettings, 9),
-    ];
-
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    l10n.menuMore,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ),
-                GridView.count(
-                  crossAxisCount: 3,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 8,
-                  crossAxisSpacing: 8,
-                  childAspectRatio: 1.1,
-                  children: items.map((item) {
-                    final selected = _selectedIndex == item.pageIndex;
-                    final colors = Theme.of(context).colorScheme;
-                    return Material(
-                      color: selected
-                          ? colors.secondaryContainer
-                          : colors.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(16),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () {
-                          Navigator.pop(context);
-                          setState(() => _selectedIndex = item.pageIndex);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                item.icon,
-                                color: selected
-                                    ? colors.onSecondaryContainer
-                                    : colors.onSurfaceVariant,
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                item.label,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.labelMedium,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -354,6 +285,8 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
         return l10n.menuStaff;
       case 9:
         return l10n.menuSettings;
+      case 10:
+        return 'Profile'; // TODO: Add to l10n
       default:
         return l10n.appTitle;
     }
@@ -362,38 +295,34 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
   int get _mobileSelectedIndex {
     switch (_selectedIndex) {
       case 0:
-        return 0;
+        return 0; // Dashboard
       case 1:
-        return 1;
+        return 1; // Customers
       case 2:
-        return 2;
+        return 2; // Orders
       case 5:
         return 3; // Measurements
+      case 10:
+        return 4; // Profile
       default:
-        return 4;
+        return 4; // Default to Profile for hidden items
     }
   }
 
   int _pageIndexForMobileTab(int tabIndex) {
     switch (tabIndex) {
       case 0:
-        return 0;
+        return 0; // Dashboard
       case 1:
-        return 1;
+        return 1; // Customers
       case 2:
-        return 2;
+        return 2; // Orders
       case 3:
         return 5; // Measurements
+      case 4:
+        return 10; // Profile
       default:
-        return 4; // Inventory (more)
+        return 0;
     }
   }
-}
-
-class _MoreMenuItem {
-  const _MoreMenuItem(this.icon, this.label, this.pageIndex);
-
-  final IconData icon;
-  final String label;
-  final int pageIndex;
 }

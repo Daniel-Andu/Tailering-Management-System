@@ -25,11 +25,53 @@ class AuthService {
   }
 
   /// Register with email and password
-  Future<UserCredential> registerWithEmailPassword(String email, String password) async {
-    return await _auth.createUserWithEmailAndPassword(
-      email: email,
-      password: password,
-    );
+  /// Returns the User directly, handling the PigeonUserDetails bug gracefully
+  Future<User> registerWithEmailPassword(String email, String password) async {
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      print('✅ Registration successful via normal path');
+      return credential.user!;
+    } catch (e) {
+      print('⚠️ AuthService: createUserWithEmailAndPassword threw error: $e');
+      
+      // Check if this is the known PigeonUserDetails type casting bug
+      final errorStr = e.toString();
+      if (errorStr.contains('PigeonUserDetails') || 
+          errorStr.contains('List<Object?>') ||
+          errorStr.contains('type cast')) {
+        print('🔍 Detected type casting bug - checking if user was actually created...');
+        
+        // Wait for Firebase to process the registration
+        await Future.delayed(const Duration(milliseconds: 800));
+        
+        // Check if a user is now authenticated
+        var user = _auth.currentUser;
+        
+        // If no user, try reloading auth state
+        if (user == null) {
+          print('⏳ No current user yet, waiting and checking again...');
+          await Future.delayed(const Duration(milliseconds: 500));
+          user = _auth.currentUser;
+        }
+        
+        if (user != null && user.email == email) {
+          print('✅ User was created successfully despite error! UID: ${user.uid}');
+          return user;
+        } else {
+          print('❌ User was NOT created - registration actually failed');
+          throw FirebaseAuthException(
+            code: 'registration-failed',
+            message: 'Registration failed: $errorStr',
+          );
+        }
+      }
+      
+      // Not the known bug - rethrow original error
+      rethrow;
+    }
   }
 
   /// Sign out
