@@ -200,12 +200,18 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
     final shouldSave = await showDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          child: SizedBox(
-            width: 600,
-            height: 700,
-            child: Column(
-              children: [
+        builder: (context, setDialogState) {
+          // DEBUG: Print dialog dimensions
+          print('🔍 NEW ORDER DIALOG: Building with fixed width=600');
+          print('🔍 Screen height: ${MediaQuery.of(context).size.height}');
+          print('🔍 Dialog height: ${MediaQuery.of(context).size.height * 0.9}');
+          
+          return Dialog(
+            child: SizedBox(
+              width: 600,
+              height: MediaQuery.of(context).size.height * 0.9,
+              child: Column(
+                children: [
                 // Header
                 Container(
                   padding: const EdgeInsets.all(20),
@@ -235,7 +241,7 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
                 // Content
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -251,16 +257,18 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
                                 decoration: InputDecoration(
                                   labelText: l10n.ordersCustomerId,
                                   prefixIcon: const Icon(Icons.person),
+                                  isDense: true,
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: TextField(
                                 controller: clothTypeController,
                                 decoration: InputDecoration(
                                   labelText: l10n.ordersClothType,
                                   prefixIcon: const Icon(Icons.checkroom),
+                                  isDense: true,
                                 ),
                               ),
                             ),
@@ -275,7 +283,10 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
                                 decoration: InputDecoration(
                                   labelText: l10n.ordersGender,
                                   prefixIcon: const Icon(Icons.wc),
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                                 ),
+                                isExpanded: true, // FIX: Prevents overflow
                                 items: [
                                   DropdownMenuItem(value: 'male', child: Text(AppLocalizations.of(context)!.genderMale)),
                                   DropdownMenuItem(value: 'female', child: Text(AppLocalizations.of(context)!.genderFemale)),
@@ -287,7 +298,7 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
                                 },
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: TextField(
                                 controller: priceController,
@@ -295,6 +306,7 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
                                 decoration: InputDecoration(
                                   labelText: l10n.ordersPrice,
                                   prefixIcon: const Icon(Icons.attach_money),
+                                  isDense: true,
                                 ),
                               ),
                             ),
@@ -307,62 +319,62 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
                         const SizedBox(height: 12),
                         Card(
                           child: Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(12),
                             child: Column(
                               children: [
                                 Row(
                                   children: [
                                     Expanded(
                                       child: _buildMeasurementField(
-                                          chestController, l10n.ordersChest),
+                                          chestController, l10n.ordersChest, context),
                                     ),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: _buildMeasurementField(
                                           shoulderController,
-                                          l10n.ordersShoulder),
+                                          l10n.ordersShoulder, context),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 8),
                                 Row(
                                   children: [
                                     Expanded(
                                       child: _buildMeasurementField(
-                                          hipController, l10n.ordersHip),
+                                          hipController, l10n.ordersHip, context),
                                     ),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: _buildMeasurementField(
-                                          breastController, l10n.ordersBreast),
+                                          breastController, l10n.ordersBreast, context),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 8),
                                 Row(
                                   children: [
                                     Expanded(
                                       child: _buildMeasurementField(
-                                          waistController, l10n.ordersWaist),
+                                          waistController, l10n.ordersWaist, context),
                                     ),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: _buildMeasurementField(
-                                          lengthController, l10n.ordersLength),
+                                          lengthController, l10n.ordersLength, context),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 8),
                                 Row(
                                   children: [
                                     Expanded(
                                       child: _buildMeasurementField(
-                                          sleeveController, l10n.ordersSleeve),
+                                          sleeveController, l10n.ordersSleeve, context),
                                     ),
-                                    const SizedBox(width: 12),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: _buildMeasurementField(
-                                          neckController, l10n.ordersNeck),
+                                          neckController, l10n.ordersNeck, context),
                                     ),
                                   ],
                                 ),
@@ -407,7 +419,9 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
                                 decoration: InputDecoration(
                                   labelText: l10n.ordersPriority,
                                   prefixIcon: const Icon(Icons.flag),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                                 ),
+                                isExpanded: true, // FIX: Prevents overflow
                                 items: [
                                   DropdownMenuItem(value: 'low', child: Text(l10n.priorityLow)),
                                   DropdownMenuItem(value: 'normal', child: Text(l10n.priorityNormal)),
@@ -425,7 +439,9 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
                                 decoration: InputDecoration(
                                   labelText: l10n.ordersUrgency,
                                   prefixIcon: const Icon(Icons.speed),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                                 ),
+                                isExpanded: true, // FIX: Prevents overflow
                                 items: [
                                   DropdownMenuItem(value: 'normal', child: Text(l10n.urgencyNormal)),
                                   DropdownMenuItem(value: 'urgent', child: Text(l10n.urgencyUrgent)),
@@ -587,7 +603,8 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
               ],
             ),
           ),
-        ),
+        );
+        },
       ),
     );
 
@@ -647,14 +664,18 @@ class _OrderBoardScreenState extends State<OrderBoardScreen> {
   }
 
   Widget _buildMeasurementField(
-      TextEditingController controller, String label) {
+      TextEditingController controller, String label, BuildContext context) {
     return TextField(
       controller: controller,
       keyboardType: TextInputType.number,
+      style: const TextStyle(fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(fontSize: 12),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,
@@ -772,7 +793,11 @@ class _OrderCard extends StatelessWidget {
               ),
               DropdownButtonFormField<String>(
                 initialValue: method,
-                decoration: InputDecoration(labelText: l10n.paymentMethod),
+                decoration: InputDecoration(
+                  labelText: l10n.paymentMethod,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                ),
+                isExpanded: true, // FIX: Prevents overflow
                 items: [
                   DropdownMenuItem(value: 'cash', child: Text(l10n.paymentCash)),
                   DropdownMenuItem(value: 'bank_transfer', child: Text(l10n.paymentBank)),

@@ -9,30 +9,48 @@ class CloudinaryService {
   CloudinaryService._internal();
 
   // Cloudinary credentials
-  static const String _cloudName = 'hozmwqs8';
-  static const String _uploadPreset = 'tailoring_app';
+  static const String _cloudName = 'xcig0m8u';
+  static const String _uploadPreset = 'tailor'; // User's custom upload preset
 
-  late CloudinaryPublic _cloudinary;
+  CloudinaryPublic? _cloudinary;
 
   /// Initialize Cloudinary
   void initialize() {
     _cloudinary = CloudinaryPublic(_cloudName, _uploadPreset, cache: false);
   }
 
+  /// Get cloudinary instance (lazy initialization)
+  CloudinaryPublic get cloudinary {
+    _cloudinary ??= CloudinaryPublic(_cloudName, _uploadPreset, cache: false);
+    return _cloudinary!;
+  }
+
   /// Upload image to Cloudinary
-  Future<String> uploadImage(File imageFile, {String folder = 'orders'}) async {
+  Future<String> uploadImage(File imageFile, {String folder = 'profile_photos'}) async {
     try {
-      final response = await _cloudinary.uploadFile(
+      // Try upload without specifying folder first
+      final response = await cloudinary.uploadFile(
         CloudinaryFile.fromFile(
           imageFile.path,
-          folder: folder,
           resourceType: CloudinaryResourceType.Image,
         ),
       );
       
       return response.secureUrl;
     } catch (e) {
-      throw Exception('Failed to upload image: $e');
+      // If that fails, try with folder
+      try {
+        final response = await cloudinary.uploadFile(
+          CloudinaryFile.fromFile(
+            imageFile.path,
+            folder: folder,
+            resourceType: CloudinaryResourceType.Image,
+          ),
+        );
+        return response.secureUrl;
+      } catch (e2) {
+        throw Exception('Failed to upload image: $e2');
+      }
     }
   }
 

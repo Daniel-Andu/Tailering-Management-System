@@ -14,6 +14,7 @@ class ShopProfile {
   final int? yearsOfExperience;
   final String? currency;
   final String? language;
+  final String? photoUrl; // Profile picture URL
   final DateTime createdAt;
   final DateTime? updatedAt;
   final bool isSetupComplete;
@@ -36,6 +37,7 @@ class ShopProfile {
     this.yearsOfExperience,
     this.currency,
     this.language,
+    this.photoUrl,
     required this.createdAt,
     this.updatedAt,
     this.isSetupComplete = false,
@@ -56,6 +58,7 @@ class ShopProfile {
       'yearsOfExperience': yearsOfExperience,
       'currency': currency,
       'language': language,
+      'photoUrl': photoUrl,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'isSetupComplete': isSetupComplete,
@@ -78,6 +81,7 @@ class ShopProfile {
       yearsOfExperience: map['yearsOfExperience'],
       currency: map['currency'],
       language: map['language'],
+      photoUrl: map['photoUrl'],
       createdAt: DateTime.parse(map['createdAt']),
       updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
       isSetupComplete: map['isSetupComplete'] ?? false,
@@ -99,6 +103,7 @@ class ShopProfile {
     int? yearsOfExperience,
     String? currency,
     String? language,
+    String? photoUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isSetupComplete,
@@ -118,6 +123,7 @@ class ShopProfile {
       yearsOfExperience: yearsOfExperience ?? this.yearsOfExperience,
       currency: currency ?? this.currency,
       language: language ?? this.language,
+      photoUrl: photoUrl ?? this.photoUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isSetupComplete: isSetupComplete ?? this.isSetupComplete,
