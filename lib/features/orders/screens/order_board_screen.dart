@@ -778,7 +778,11 @@ class _OrderCard extends StatelessWidget {
                   DropdownMenuItem(value: 'bank_transfer', child: Text(l10n.paymentBank)),
                   DropdownMenuItem(value: 'telebirr', child: Text(l10n.paymentTelebirr)),
                   DropdownMenuItem(value: 'cbe_birr', child: Text(l10n.paymentCbeBirr)),
-                  DropdownMenuItem(value: 'chapa', child: Text(l10n.paymentChapa)),
+                  DropdownMenuItem(
+                    value: 'chapa',
+                    enabled: false,
+                    child: Text(l10n.paymentChapaUnavailable),
+                  ),
                   DropdownMenuItem(value: 'mobile_money', child: Text(l10n.paymentMobileMoney)),
                 ],
                 onChanged: (value) {

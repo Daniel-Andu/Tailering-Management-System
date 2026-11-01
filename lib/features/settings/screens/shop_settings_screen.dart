@@ -1,11 +1,16 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:tailoring_system/features/settings/providers/app_settings_provider.dart';
 import 'package:tailoring_system/features/settings/screens/sync_status_screen.dart';
 import 'package:tailoring_system/l10n/app_localizations.dart';
 import 'package:tailoring_system/providers/language_provider.dart';
 import 'package:tailoring_system/providers/auth_provider.dart';
+import 'package:tailoring_system/providers/theme_provider.dart';
 import 'package:tailoring_system/screens/auth/auth_router.dart';
+import 'package:tailoring_system/screens/pricing_screen.dart';
 import 'package:tailoring_system/utils/license_manager.dart';
 
 class ShopSettingsScreen extends StatefulWidget {
@@ -22,6 +27,8 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
   final _footerController = TextEditingController();
   String _licenseInfo = '';
   String _deviceId = '';
+  int _trialDaysRemaining = 0;
+  bool _isLicensed = false;
 
   @override
   void initState() {
@@ -35,10 +42,14 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
       _footerController.text = provider.value('receipt.footer') ?? '';
       final info = await LicenseManager.getLicenseInfo();
       final deviceId = await LicenseManager.getDeviceId();
+      final trialDays = await LicenseManager.getTrialDaysRemaining();
+      final isLicensed = await LicenseManager.isLicensed();
       if (mounted) {
         setState(() {
           _licenseInfo = info;
           _deviceId = deviceId;
+          _trialDaysRemaining = trialDays;
+          _isLicensed = isLicensed;
         });
       }
     });
@@ -119,18 +130,99 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
 
               const SizedBox(height: 16),
 
+              Consumer<ThemeProvider>(
+                builder: (context, themeProvider, _) => _SectionCard(
+                  icon: Icons.dark_mode_outlined,
+                  title: 'Appearance',
+                  child: SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Dark theme'),
+                    subtitle: const Text('Use darker colors across the app'),
+                    value: themeProvider.isDarkMode,
+                    onChanged: (enabled) => themeProvider.setThemeMode(
+                      enabled ? ThemeMode.dark : ThemeMode.light,
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
               // ── Account & Profile ─────────────────────────────────────────
               Consumer<AuthProvider>(
                 builder: (context, authProvider, _) {
                   final user = authProvider.currentUser;
                   final shopProfile = authProvider.shopProfile;
-                  
+
                   return _SectionCard(
                     icon: Icons.account_circle,
                     title: 'Account & Profile',
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Center(
+                          child: Tooltip(
+                            message: 'Change profile photo',
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: authProvider.isLoading
+                                  ? null
+                                  : () => _changeProfilePhoto(context),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 38,
+                                    backgroundImage:
+                                        shopProfile?.profileImageUrl == null
+                                            ? null
+                                            : NetworkImage(
+                                                shopProfile!.profileImageUrl!,
+                                              ),
+                                    child: shopProfile?.profileImageUrl == null
+                                        ? const Icon(Icons.store, size: 36)
+                                        : null,
+                                  ),
+                                  Positioned(
+                                    right: -2,
+                                    bottom: -2,
+                                    child: CircleAvatar(
+                                      radius: 14,
+                                      backgroundColor:
+                                          Theme.of(context).colorScheme.primary,
+                                      child: authProvider.isLoading
+                                          ? const SizedBox(
+                                              width: 14,
+                                              height: 14,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : Icon(
+                                              Icons.camera_alt_outlined,
+                                              size: 15,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimary,
+                                            ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Center(
+                          child: OutlinedButton.icon(
+                            onPressed: authProvider.isLoading
+                                ? null
+                                : () => _changeProfilePhoto(context),
+                            icon: const Icon(Icons.camera_alt_outlined),
+                            label: const Text('Change photo'),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         if (user != null) ...[
                           _InfoRow(
                             icon: Icons.email,
@@ -251,6 +343,73 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: _isLicensed
+                            ? Colors.green.shade50
+                            : _trialDaysRemaining > 5
+                                ? Colors.orange.shade50
+                                : Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _isLicensed
+                              ? Colors.green.shade300
+                              : _trialDaysRemaining > 5
+                                  ? Colors.orange.shade300
+                                  : Colors.red.shade300,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _isLicensed
+                                ? Icons.verified_user
+                                : (_trialDaysRemaining > 5
+                                    ? Icons.timer_outlined
+                                    : Icons.warning_amber_rounded),
+                            color: _isLicensed
+                                ? Colors.green.shade700
+                                : (_trialDaysRemaining > 5
+                                    ? Colors.orange.shade700
+                                    : Colors.red.shade700),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _isLicensed
+                                      ? 'Full license active'
+                                      : (_trialDaysRemaining > 0
+                                          ? '30-day trial active'
+                                          : 'Trial expired'),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _isLicensed
+                                      ? 'Your app is fully activated.'
+                                      : (_trialDaysRemaining > 0
+                                          ? '$_trialDaysRemaining days remaining in your free trial.'
+                                          : 'Your free trial has ended. Upgrade to continue.'),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerHighest,
@@ -282,6 +441,19 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                         ],
                       ),
                     ],
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const PricingScreen(),
+                          ),
+                        ),
+                        icon: const Icon(Icons.workspace_premium_outlined),
+                        label: const Text('Plans and subscription'),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -406,98 +578,259 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
     }
   }
 
+  Future<void> _changeProfilePhoto(BuildContext context) async {
+    final authProvider = context.read<AuthProvider>();
+
+    try {
+      final image = await _pickProfileImage();
+      if (image == null || !context.mounted) return;
+      final bytes = image.bytes;
+      if (bytes == null || bytes.isEmpty) {
+        throw StateError('The selected image could not be read.');
+      }
+
+      final profile = authProvider.shopProfile;
+      if (profile == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'The photo was selected, but cannot be saved until your shop profile is available.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      await authProvider.updateShopProfile(
+        profile,
+        profileImage: bytes,
+        imageContentType: _imageContentType(image),
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile photo updated successfully')),
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not update profile photo: $error')),
+        );
+      }
+    }
+  }
+
+  Future<PlatformFile?> _pickProfileImage() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+      withData: true,
+    );
+    return result?.files.single;
+  }
+
+  String _imageContentType(PlatformFile image) {
+    return switch (image.extension?.toLowerCase()) {
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      'gif' => 'image/gif',
+      'bmp' => 'image/bmp',
+      _ => 'image/jpeg',
+    };
+  }
+
   Future<void> _editProfile(BuildContext context) async {
     final authProvider = context.read<AuthProvider>();
     final shopProfile = authProvider.shopProfile;
-    
+
     if (shopProfile == null) return;
 
-    final shopNameController = TextEditingController(text: shopProfile.shopName);
-    final ownerNameController = TextEditingController(text: shopProfile.ownerName);
-    final phoneController = TextEditingController(text: shopProfile.phoneNumber);
+    final shopNameController =
+        TextEditingController(text: shopProfile.shopName);
+    final ownerNameController =
+        TextEditingController(text: shopProfile.ownerName);
+    final phoneController =
+        TextEditingController(text: shopProfile.phoneNumber);
     final addressController = TextEditingController(text: shopProfile.address);
     final cityController = TextEditingController(text: shopProfile.city);
-    String? selectedSpecialization = shopProfile.specialization;  // Allow null
+    String? selectedSpecialization = shopProfile.specialization; // Allow null
+    PlatformFile? selectedImage;
+
+    Uint8List? selectedImageBytes;
 
     final updated = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Profile'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: shopNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Shop Name',
-                  prefixIcon: Icon(Icons.store),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edit Profile'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (selectedImageBytes != null ||
+                    shopProfile.profileImageUrl != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      ),
+                    ),
+                    child: selectedImageBytes != null
+                        ? ClipOval(
+                            child: Image.memory(
+                              selectedImageBytes!,
+                              fit: BoxFit.cover,
+                              width: 90,
+                              height: 90,
+                            ),
+                          )
+                        : ClipOval(
+                            child: shopProfile.profileImageUrl != null
+                                ? Image.network(
+                                    shopProfile.profileImageUrl!,
+                                    fit: BoxFit.cover,
+                                    width: 90,
+                                    height: 90,
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                      Icons.person,
+                                      size: 40,
+                                    ),
+                                  )
+                                : const Icon(Icons.person, size: 40),
+                          ),
+                  ),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    try {
+                      final image = await _pickProfileImage();
+                      if (image != null) {
+                        final bytes = image.bytes;
+                        if (bytes == null || bytes.isEmpty) {
+                          throw StateError(
+                              'The selected image could not be read.');
+                        }
+                        setDialogState(() {
+                          selectedImage = image;
+                          selectedImageBytes = bytes;
+                        });
+                      }
+                    } catch (error) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content:
+                                Text('Could not select profile photo: $error'),
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.add_a_photo_outlined),
+                  label: Text(
+                    selectedImage == null
+                        ? 'Choose profile photo'
+                        : 'Photo selected',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: ownerNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Owner Name',
-                  prefixIcon: Icon(Icons.person),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: shopNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Shop Name',
+                    prefixIcon: Icon(Icons.store),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'Phone Number',
-                  prefixIcon: Icon(Icons.phone),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: ownerNameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Owner Name',
+                    prefixIcon: Icon(Icons.person),
+                  ),
                 ),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: addressController,
-                decoration: const InputDecoration(
-                  labelText: 'Address',
-                  prefixIcon: Icon(Icons.location_on),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number',
+                    prefixIcon: Icon(Icons.phone),
+                  ),
+                  keyboardType: TextInputType.phone,
                 ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: cityController,
-                decoration: const InputDecoration(
-                  labelText: 'City',
-                  prefixIcon: Icon(Icons.location_city),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: addressController,
+                  decoration: const InputDecoration(
+                    labelText: 'Address',
+                    prefixIcon: Icon(Icons.location_on),
+                  ),
+                  maxLines: 2,
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TextField(
+                  controller: cityController,
+                  decoration: const InputDecoration(
+                    labelText: 'City',
+                    prefixIcon: Icon(Icons.location_city),
+                  ),
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Save'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Save'),
-          ),
-        ],
       ),
     );
 
-    shopNameController.dispose();
-    ownerNameController.dispose();
-    phoneController.dispose();
-    addressController.dispose();
-    cityController.dispose();
-
     if (updated == true && context.mounted) {
-      // TODO: Implement profile update in AuthProvider
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      try {
+        final imageBytes = selectedImageBytes;
+        final imageFile = selectedImage;
+        await authProvider.updateShopProfile(
+          shopProfile.copyWith(
+            shopName: shopNameController.text.trim(),
+            ownerName: ownerNameController.text.trim(),
+            phone: phoneController.text.trim(),
+            address: addressController.text.trim(),
+            city: cityController.text.trim(),
+            specialization: selectedSpecialization,
+          ),
+          profileImage: imageBytes,
+          imageContentType:
+              imageFile == null ? 'image/jpeg' : _imageContentType(imageFile),
+        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile saved successfully')),
+          );
+        }
+      } catch (error) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not save profile: $error')),
+          );
+        }
+      }
+
+      shopNameController.dispose();
+      ownerNameController.dispose();
+      phoneController.dispose();
+      addressController.dispose();
+      cityController.dispose();
     }
   }
 }
@@ -573,13 +906,13 @@ class _LanguageTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: selected
-              ? theme.colorScheme.primary.withOpacity(0.1)
+              ? theme.colorScheme.primary.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected
                 ? theme.colorScheme.primary
-                : theme.colorScheme.outline.withOpacity(0.3),
+                : theme.colorScheme.outline.withValues(alpha: 0.3),
             width: selected ? 2 : 1,
           ),
         ),

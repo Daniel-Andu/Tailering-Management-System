@@ -199,7 +199,8 @@ class _CreateAppointmentScreenState extends State<_CreateAppointmentScreen> {
           l10n.appointmentDialogTitle,
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.blue[900],
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -237,7 +238,7 @@ class _CreateAppointmentScreenState extends State<_CreateAppointmentScreen> {
                     children: [
                       Card(
                         elevation: 4,
-                        shadowColor: Colors.blue.withOpacity(0.2),
+                        shadowColor: Colors.blue.withValues(alpha: 0.2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -341,7 +342,7 @@ class _CreateAppointmentScreenState extends State<_CreateAppointmentScreen> {
                       const SizedBox(height: 16),
                       Card(
                         elevation: 4,
-                        shadowColor: Colors.blue.withOpacity(0.2),
+                        shadowColor: Colors.blue.withValues(alpha: 0.2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),

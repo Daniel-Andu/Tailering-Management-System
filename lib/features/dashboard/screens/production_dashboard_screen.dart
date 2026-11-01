@@ -27,7 +27,7 @@ class _ProductionDashboardScreenState extends State<ProductionDashboardScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(l10n.dashboardTitle),
         actions: [
@@ -144,6 +144,7 @@ class _DashboardHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -152,13 +153,15 @@ class _DashboardHeader extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             theme.colorScheme.primary,
-            theme.colorScheme.secondary,
+            isDark
+                ? theme.colorScheme.primaryContainer
+                : theme.colorScheme.secondary,
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(0.4),
+            color: theme.colorScheme.primary.withValues(alpha: 0.28),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -172,8 +175,10 @@ class _DashboardHeader extends StatelessWidget {
               children: [
                 Text(
                   l10n.dashboardBusinessOverview,
-                  style: const TextStyle(
-                    color: Colors.white70,
+                  style: TextStyle(
+                    color: isDark
+                        ? theme.colorScheme.onPrimaryContainer
+                        : Colors.white70,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -181,8 +186,10 @@ class _DashboardHeader extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '${summary.monthPayments.toStringAsFixed(0)} ${l10n.commonETB}',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: isDark
+                        ? theme.colorScheme.onPrimaryContainer
+                        : Colors.white,
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
@@ -191,8 +198,10 @@ class _DashboardHeader extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   l10n.dashboardMonthPaid,
-                  style: const TextStyle(
-                    color: Colors.white60,
+                  style: TextStyle(
+                    color: isDark
+                        ? theme.colorScheme.onPrimaryContainer.withValues(alpha: 0.8)
+                        : Colors.white60,
                     fontSize: 12,
                   ),
                 ),
@@ -202,10 +211,18 @@ class _DashboardHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
+              color: isDark
+                  ? theme.colorScheme.surface.withValues(alpha: 0.22)
+                  : Colors.white.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.checkroom, color: Colors.white, size: 32),
+            child: Icon(
+              Icons.checkroom,
+              color: isDark
+                  ? theme.colorScheme.onPrimaryContainer
+                  : Colors.white,
+              size: 32,
+            ),
           ),
         ],
       ),
@@ -284,8 +301,16 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final tintedBackground = Color.alphaBlend(
+      data.bgColor.withValues(alpha: isDark ? 0.18 : 0.12),
+      theme.colorScheme.surface,
+    );
+
     return Card(
-      elevation: 2,
+      elevation: isDark ? 0 : 2,
+      color: theme.colorScheme.surface,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -294,7 +319,7 @@ class _MetricCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: data.bgColor,
+                color: tintedBackground,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(data.icon, size: 24, color: data.iconColor),
@@ -312,7 +337,7 @@ class _MetricCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade600,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -323,7 +348,7 @@ class _MetricCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w800,
-                      color: data.iconColor,
+                      color: isDark ? theme.colorScheme.onSurface : data.iconColor,
                     ),
                   ),
                 ],
@@ -363,12 +388,12 @@ class _OrderPanel extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.08),
+              color: accentColor.withValues(alpha: 0.08),
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(16)),
               border: Border(
                   bottom:
-                      BorderSide(color: accentColor.withOpacity(0.15))),
+                      BorderSide(color: accentColor.withValues(alpha: 0.15))),
             ),
             child: Row(
               children: [
@@ -382,7 +407,7 @@ class _OrderPanel extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.15),
+                    color: accentColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -420,7 +445,7 @@ class _OrderPanel extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.1),
+                    color: accentColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.receipt_long,
@@ -434,14 +459,17 @@ class _OrderPanel extends StatelessWidget {
                 ),
                 subtitle: Text(
                   '${order['customer_name'] ?? '-'}  ${order['customer_phone'] ?? ''}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 trailing: showBalance
                     ? Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: accentColor.withOpacity(0.1),
+                          color: accentColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -456,7 +484,7 @@ class _OrderPanel extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: accentColor.withOpacity(0.1),
+                          color: accentColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(

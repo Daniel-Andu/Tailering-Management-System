@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:tailoring_system/models/shop_profile.dart';
 import 'package:tailoring_system/services/firebase_service.dart';
 
@@ -22,7 +25,7 @@ class ShopService {
       print('📝 Creating shop profile for user: $_userId');
       print('📝 Collection: $_collectionName');
       print('📝 Profile data: ${profile.toMap()}');
-      
+
       // Test Firestore connectivity first
       print('🔍 Testing Firestore connectivity...');
       try {
@@ -32,16 +35,16 @@ class ShopService {
         print('❌ Firestore connectivity test failed: $testError');
         throw Exception('Cannot connect to Firestore: $testError');
       }
-      
+
       // Now create the actual profile
       print('📝 Writing to Firestore...');
       final docRef = _firestore.collection(_collectionName).doc(_userId);
       print('📝 Document path: ${docRef.path}');
-      
+
       await docRef.set(profile.toMap());
-      
+
       print('✅ Shop profile created successfully');
-      
+
       // Verify it was actually written
       print('🔍 Verifying write...');
       final verifyDoc = await docRef.get();
@@ -64,26 +67,11 @@ class ShopService {
       return null;
     }
 
-    try {
-      print('📖 Fetching shop profile for user: $_userId');
-      
-      final doc = await _firestore
-          .collection(_collectionName)
-          .doc(_userId)
-          .get();
-      
-      if (!doc.exists) {
-        print('⚠️ Shop profile not found');
-        return null;
-      }
-      
-      final profile = ShopProfile.fromMap(doc.data()!, doc.id);
-      print('✅ Shop profile loaded: ${profile.shopName}');
-      return profile;
-    } catch (e) {
-      print('❌ Error getting shop profile: $e');
-      return null;
-    }
+    final doc = await _firestore.collection(_collectionName).doc(_userId).get();
+
+    if (!doc.exists) return null;
+
+    return ShopProfile.fromMap(doc.data()!, doc.id);
   }
 
   /// Update shop profile
@@ -94,20 +82,34 @@ class ShopService {
 
     try {
       print('📝 Updating shop profile for user: $_userId');
-      
-      await _firestore
-          .collection(_collectionName)
-          .doc(_userId)
-          .update({
+
+      await _firestore.collection(_collectionName).doc(_userId).set({
         ...profile.toMap(),
         'updatedAt': DateTime.now().toIso8601String(),
-      });
-      
+      }, SetOptions(merge: true));
+
       print('✅ Shop profile updated successfully');
     } catch (e) {
       print('❌ Error updating shop profile: $e');
       throw Exception('Failed to update shop profile: $e');
     }
+  }
+
+  Future<String> uploadProfileImage(
+    Uint8List bytes, {
+    required String contentType,
+  }) async {
+    if (_userId == null) throw Exception('User not authenticated');
+    final reference =
+        _firebase.storage.ref().child('shops/$_userId/profile/profile-image');
+    final result = await reference.putData(
+      bytes,
+      SettableMetadata(
+        contentType: contentType,
+        cacheControl: 'public,max-age=3600',
+      ),
+    );
+    return result.ref.getDownloadURL();
   }
 
   /// Check if shop setup is complete
@@ -131,15 +133,12 @@ class ShopService {
 
     try {
       print('📝 Marking setup as complete for user: $_userId');
-      
-      await _firestore
-          .collection(_collectionName)
-          .doc(_userId)
-          .update({
+
+      await _firestore.collection(_collectionName).doc(_userId).update({
         'isSetupComplete': true,
         'updatedAt': DateTime.now().toIso8601String(),
       });
-      
+
       print('✅ Setup marked as complete');
     } catch (e) {
       print('❌ Error completing setup: $e');

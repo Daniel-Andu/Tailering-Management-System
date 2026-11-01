@@ -57,9 +57,30 @@ A complete cross-platform business management application for tailoring shops, b
    flutter run
    ```
 
-### Building for Distribution
+   ### Running on Chrome
 
-**Android APK:**
+   The web app requires a Firebase Web app configuration. In Firebase Console,
+   register a Web app for this Firebase project and pass its configuration when
+   starting Flutter:
+
+   ```powershell
+   flutter run -d chrome `
+     --dart-define=FIREBASE_API_KEY=<apiKey> `
+     --dart-define=FIREBASE_AUTH_DOMAIN=<authDomain> `
+     --dart-define=FIREBASE_PROJECT_ID=<projectId> `
+     --dart-define=FIREBASE_STORAGE_BUCKET=<storageBucket> `
+     --dart-define=FIREBASE_MESSAGING_SENDER_ID=<messagingSenderId> `
+     --dart-define=FIREBASE_APP_ID=<appId>
+   ```
+
+   These are Firebase client configuration values, not server credentials. If
+   they are missing or invalid, the app displays a Firebase setup message rather
+   than opening to a blank page. Keep service-account keys and other privileged
+   credentials out of the Flutter app.
+
+   ### Building for Distribution
+
+   **Android APK:**
 ```bash
 scripts/build_release_apk.bat
 # Output: build/app/outputs/flutter-apk/app-release.apk
@@ -138,6 +159,43 @@ The application includes a secure offline license system:
 - **License key format:** `TAILOR-XXXX-XXXX-XXXX`
 - **Device binding** with unique device ID generation
 - **Offline validation** - no server required
+
+## Subscriptions and messaging integrations
+
+Plan checkout uses Chapa API v2 Hosted Checkout through a trusted backend.
+This repository's backend is locked to Test Mode; it is not ready for Live Mode
+because payment attempts are currently stored in memory. Never put a Chapa
+private key in Flutter. Configure the backend URL when building the app:
+
+```powershell
+flutter build apk --dart-define=SUBSCRIPTION_API_URL=https://your-backend.example
+```
+
+The backend must authenticate Firebase ID tokens, accept
+`POST /subscriptions/checkout` with `plan_id` and `device_id`, return a
+`checkout_url`, verify payments with `POST /subscriptions/verify`, and provide
+`GET /subscriptions/status`. The server calculates the amount and activates a
+subscription only after verifying the status, reference, amount, and currency.
+Optional webhooks require a configured signature secret. Automatic recurring
+charges are not enabled; customers renew annually.
+
+See [the Chapa Test Mode guide](docs/CHAPA_BACKEND_GUIDE.md) for setup,
+mocked-test commands, and a manual sandbox checkout checklist.
+The Chapa option for customer order payments is unavailable until a
+server-verified order checkout flow is added; cash and other manual payment
+records are unchanged.
+
+Automatic SMS delivery can be enabled using a trusted provider-backed endpoint:
+
+```powershell
+flutter build apk --dart-define=SMS_GATEWAY_API_URL=https://your-backend.example/api/sms/send
+```
+
+That endpoint receives an authenticated Firebase ID token and a JSON body
+containing `to`, `message`, `reference`, and `language_code`. Return
+`{"accepted":true,"message_id":"provider-id"}` only after the SMS provider
+accepts the message. Keep provider credentials on the backend. Without this
+setting, messages stay queued and are not marked as sent.
 
 ## 📖 Documentation
 

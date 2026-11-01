@@ -13,6 +13,13 @@ class PaymentRepository {
     String? notes,
     int? employeeId,
   }) async {
+    if (paymentMethod == PaymentMethods.chapa) {
+      throw StateError(
+        'Chapa order payments require server verification; order checkout '
+        'is not connected yet.',
+      );
+    }
+
     final db = await DatabaseHelper.instance.database;
     return db.transaction((txn) async {
       final sequence = AppSequenceRepository(txn);

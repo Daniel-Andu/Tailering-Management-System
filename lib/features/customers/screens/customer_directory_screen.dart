@@ -136,22 +136,38 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
                 backgroundColor: Theme.of(context).colorScheme.surface,
                 foregroundColor: Theme.of(context).colorScheme.onSurface,
                 automaticallyImplyLeading: false,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  tooltip: 'Back to customers',
-                  style: IconButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.primaryContainer,
-                    foregroundColor:
-                        Theme.of(context).colorScheme.onPrimaryContainer,
+                leading: Padding(
+                  padding: const EdgeInsets.only(left: 8, top: 4, bottom: 4),
+                  child: Material(
+                    color: Theme.of(context).colorScheme.primary,
                     shape: const CircleBorder(),
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: const Padding(
+                        padding: EdgeInsets.all(6),
+                        child: Icon(
+                          Icons.arrow_back_rounded,
+                          color: Colors.white,
+                          size: 22,
+                        ),
+                      ),
+                    ),
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
                 ),
-                title: const Text('Customer detail'),
+                title: Text(
+                  'Customer detail',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.edit),
+                    icon: Icon(
+                      Icons.edit,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                     onPressed: () => _showEditCustomerDialog(customer),
                     tooltip: 'Edit Customer',
                   ),
@@ -168,7 +184,7 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),
@@ -184,7 +200,7 @@ class _CustomerDirectoryScreenState extends State<CustomerDirectoryScreen> {
                               backgroundColor: Theme.of(context)
                                   .colorScheme
                                   .primary
-                                  .withOpacity(0.12),
+                                  .withValues(alpha: 0.12),
                               child: Text(
                                 _initials('${customer['name'] ?? ''}'),
                                 style: TextStyle(

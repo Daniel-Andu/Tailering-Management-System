@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tailoring_system/providers/auth_provider.dart';
-import 'package:tailoring_system/models/shop_profile.dart';
 import 'package:tailoring_system/app/production_shell_screen.dart';
 
 /// Shop onboarding - collect additional business details
@@ -42,18 +41,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     final authProvider = context.read<AuthProvider>();
     final currentProfile = authProvider.shopProfile;
-    
+
     if (currentProfile == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('❌ Error: Shop profile not found. Please register again.'),
+          content: Text(
+              'Your shop profile is not available yet. Please try again in a moment.'),
           backgroundColor: Colors.red,
         ),
       );
+      await authProvider.checkAuthStatus();
       return;
     }
 
-    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -88,15 +89,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       print('🔄 Completing onboarding...');
       print('📝 Shop: ${updatedProfile.shopName}');
       print('📝 City: ${updatedProfile.city}');
-      
+
       await authProvider.completeOnboarding(updatedProfile);
       print('✅ Onboarding completed successfully');
-      
+
       if (!mounted) return;
-      
+
       // Close loading dialog
       Navigator.of(context).pop();
-      
+
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -105,21 +106,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           duration: Duration(seconds: 2),
         ),
       );
-      
+
       // Navigate to main app
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const ProductionShellScreen()),
         (route) => false,
       );
-      
     } catch (e) {
       print('❌ Onboarding error: $e');
-      
+
       if (!mounted) return;
-      
+
       // Close loading dialog
       Navigator.of(context).pop();
-      
+
       // Show detailed error
       showDialog(
         context: context,
@@ -166,7 +166,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ],
         ),
       );
-      
+
       debugPrint('❌ Onboarding error details: $e');
     }
   }
@@ -189,13 +189,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       body: Stepper(
         currentStep: _currentStep,
         onStepContinue: () {
+          if (shopProfile == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                    'Shop profile is still loading. Please wait a moment and try again.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+            return;
+          }
+
           if (_currentStep < 2) {
             setState(() => _currentStep++);
           } else {
             _completeOnboarding();
           }
         },
-        onStepCancel: _currentStep > 0 ? () => setState(() => _currentStep--) : null,
+        onStepCancel:
+            _currentStep > 0 ? () => setState(() => _currentStep--) : null,
         steps: [
           // Step 1: Welcome
           Step(
@@ -207,7 +219,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               children: [
                 Text(
                   'Welcome, ${shopProfile?.ownerName ?? 'Tailor'}!',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -233,25 +246,32 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Column(
                 children: [
                   DropdownButtonFormField<String>(
-                    value: _selectedBusinessType,
+                    initialValue: _selectedBusinessType,
                     decoration: InputDecoration(
                       labelText: 'Business Type',
                       filled: true,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                        borderSide:
+                            BorderSide(color: Theme.of(context).dividerColor),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                        borderSide:
+                            BorderSide(color: Theme.of(context).dividerColor),
                       ),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'tailor', child: Text('Tailor Shop')),
-                      DropdownMenuItem(value: 'alteration', child: Text('Alteration Services')),
-                      DropdownMenuItem(value: 'custom_design', child: Text('Custom Design')),
+                      DropdownMenuItem(
+                          value: 'tailor', child: Text('Tailor Shop')),
+                      DropdownMenuItem(
+                          value: 'alteration',
+                          child: Text('Alteration Services')),
+                      DropdownMenuItem(
+                          value: 'custom_design', child: Text('Custom Design')),
                     ],
-                    onChanged: (v) => setState(() => _selectedBusinessType = v!),
+                    onChanged: (v) =>
+                        setState(() => _selectedBusinessType = v!),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -262,14 +282,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       filled: true,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                        borderSide:
+                            BorderSide(color: Theme.of(context).dividerColor),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                        borderSide:
+                            BorderSide(color: Theme.of(context).dividerColor),
                       ),
                     ),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Address is required' : null,
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? 'Address is required'
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -280,14 +304,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       filled: true,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                        borderSide:
+                            BorderSide(color: Theme.of(context).dividerColor),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                        borderSide:
+                            BorderSide(color: Theme.of(context).dividerColor),
                       ),
                     ),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'City is required' : null,
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? 'City is required'
+                        : null,
                   ),
                 ],
               ),
@@ -301,22 +329,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             content: Column(
               children: [
                 DropdownButtonFormField<String>(
-                  value: _selectedCurrency,
+                  initialValue: _selectedCurrency,
                   decoration: InputDecoration(
                     labelText: 'Currency',
                     filled: true,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                      borderSide:
+                          BorderSide(color: Theme.of(context).dividerColor),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                      borderSide:
+                          BorderSide(color: Theme.of(context).dividerColor),
                     ),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'ETB', child: Text('Ethiopian Birr (ETB)')),
-                    DropdownMenuItem(value: 'USD', child: Text('US Dollar (USD)')),
+                    DropdownMenuItem(
+                        value: 'ETB', child: Text('Ethiopian Birr (ETB)')),
+                    DropdownMenuItem(
+                        value: 'USD', child: Text('US Dollar (USD)')),
                     DropdownMenuItem(value: 'EUR', child: Text('Euro (EUR)')),
                   ],
                   onChanged: (v) => setState(() => _selectedCurrency = v!),

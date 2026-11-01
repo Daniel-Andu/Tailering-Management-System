@@ -3,7 +3,13 @@ import 'package:tailoring_system/utils/database_helper.dart';
 
 class NotificationRepository {
   NotificationRepository({SmsGateway? smsGateway})
-      : _smsGateway = smsGateway ?? AndroidSmsGateway();
+      : _smsGateway = smsGateway ??
+            (const String.fromEnvironment('SMS_GATEWAY_API_URL').isEmpty
+                ? DisabledSmsGateway()
+                : HttpSmsGateway(
+                    endpoint:
+                        const String.fromEnvironment('SMS_GATEWAY_API_URL'),
+                  ));
 
   final SmsGateway _smsGateway;
 

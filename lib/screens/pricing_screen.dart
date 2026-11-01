@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tailoring_system/features/subscriptions/data/subscription_service.dart';
 import 'package:tailoring_system/l10n/app_localizations.dart';
 import 'package:tailoring_system/utils/license_manager.dart';
 
@@ -11,13 +12,20 @@ class PricingScreen extends StatefulWidget {
 }
 
 class _PricingScreenState extends State<PricingScreen> {
+  final _service = SubscriptionService();
   String _deviceId = '';
-  bool _copied = false;
+  String? _checkoutIdempotencyKey;
+  String? _pendingMerchantReference;
+  Uri? _pendingCheckoutUrl;
+  String? _error;
+  SubscriptionStatus? _status;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     _loadDeviceId();
+    _refreshStatus();
   }
 
   Future<void> _loadDeviceId() async {
@@ -25,689 +33,414 @@ class _PricingScreenState extends State<PricingScreen> {
     if (mounted) setState(() => _deviceId = id);
   }
 
-  Future<void> _copyDeviceId() async {
-    await Clipboard.setData(ClipboardData(text: _deviceId));
-    if (!mounted) return;
-    setState(() => _copied = true);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Device ID copied! Now send it to our Telegram.'),
-        backgroundColor: Colors.green.shade700,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-    await Future.delayed(const Duration(seconds: 3));
-    if (mounted) setState(() => _copied = false);
+  String _friendlyError(Object error) {
+    final text = error.toString();
+    if (text.contains('Failed to fetch') || text.contains('ClientException')) {
+      return 'The billing backend is not reachable right now. Start your backend and make sure SUBSCRIPTION_API_URL points to the correct URL.';
+    }
+    if (text.contains('Chapa subscriptions are not configured')) {
+      return 'Chapa checkout is not configured yet. Set SUBSCRIPTION_API_URL in the app build/run command.';
+    }
+    return text.replaceFirst('Exception: ', '').replaceFirst('Exception', '');
   }
 
-  void _openTelegram(BuildContext context) {
-    // On mobile this would open Telegram app
-    // For now we show the Telegram link
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.send, color: Color(0xFF8B5CF6)),
-            SizedBox(width: 8),
-            Text('Contact on Telegram'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Send us:'),
-            const SizedBox(height: 8),
-            _InfoTile(icon: Icons.phone_android, text: 'Your Device ID'),
-            _InfoTile(icon: Icons.receipt_long, text: 'Payment screenshot'),
-            _InfoTile(icon: Icons.business, text: 'Your shop name'),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3E8FF),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.telegram, color: Color(0xFF0088CC), size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    't.me/TailorSystemET',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0088CC),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+  Future<void> _refreshStatus() async {
+    if (!_service.isConfigured) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      _status = await _service.loadStatus();
+    } catch (error) {
+      _error = _friendlyError(error);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _startCheckout(String planId) async {
+    if (!_service.isConfigured ||
+        _isLoading ||
+        _pendingMerchantReference != null) {
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final idempotencyKey =
+          _checkoutIdempotencyKey ??= _service.createIdempotencyKey();
+      final checkout = await _service.startCheckout(
+        planId: planId,
+        deviceId: _deviceId,
+        idempotencyKey: idempotencyKey,
+      );
+      if (mounted) {
+        setState(() {
+          _pendingMerchantReference = checkout.merchantReference;
+          _pendingCheckoutUrl = checkout.checkoutUrl;
+        });
+      }
+      final opened = await _service.openCheckout(checkout.checkoutUrl);
+      if (!opened) throw StateError('Could not open the Chapa checkout page.');
+      _checkoutIdempotencyKey = null;
+    } catch (error) {
+      if (mounted) {
+        setState(() => _error = _friendlyError(error));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _openPendingCheckout() async {
+    final checkoutUrl = _pendingCheckoutUrl;
+    if (checkoutUrl == null || _isLoading) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final opened = await _service.openCheckout(checkoutUrl);
+      if (!opened) throw StateError('Could not open the Chapa checkout page.');
+      _checkoutIdempotencyKey = null;
+    } catch (error) {
+      if (mounted) setState(() => _error = _friendlyError(error));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _verifyPendingCheckout() async {
+    final reference = _pendingMerchantReference;
+    if (reference == null || _isLoading) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final result = await _service.verifyCheckout(reference);
+      if (!mounted) return;
+      setState(() {
+        _status = result.isActive ? result : _status;
+        if (result.isActive ||
+            const {'cancelled', 'failed', 'incomplete'}
+                .contains(result.paymentStatus)) {
+          _pendingMerchantReference = null;
+          _pendingCheckoutUrl = null;
+          _checkoutIdempotencyKey = null;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.isActive
+                ? 'Payment verified. Your subscription is active.'
+                : 'Payment is ${result.paymentStatus ?? 'not confirmed'}. '
+                    'Your subscription has not been activated.',
           ),
-        ],
-      ),
-    );
+        ),
+      );
+    } catch (error) {
+      if (mounted) setState(() => _error = _friendlyError(error));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.pricingTitle),
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            tooltip: 'Refresh subscription status',
+            onPressed: _isLoading ? null : _refreshStatus,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ── Header ──────────────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  theme.colorScheme.primary,
-                  theme.colorScheme.secondary,
+          Card(
+            color: colors.primaryContainer,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Icon(Icons.workspace_premium,
+                      size: 40, color: colors.onPrimaryContainer),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Annual subscription',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: colors.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Choose a plan and pay securely with Chapa. Renewal is annual; the app does not charge automatically.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: colors.onPrimaryContainer),
+                  ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(20),
             ),
-            child: Column(
+          ),
+          const SizedBox(height: 12),
+          _subscriptionCard(context),
+          if (_pendingMerchantReference != null) ...[
+            const SizedBox(height: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.storefront, color: Colors.white, size: 40),
-                const SizedBox(height: 8),
-                Text(
-                  'Tailoring System License',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                if (_pendingCheckoutUrl != null)
+                  OutlinedButton.icon(
+                    onPressed: _isLoading ? null : _openPendingCheckout,
+                    icon: const Icon(Icons.open_in_new),
+                    label: const Text('Reopen checkout'),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'One-time yearly payment — no subscription tricks',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.85),
-                    fontSize: 13,
-                  ),
-                  textAlign: TextAlign.center,
+                OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _verifyPendingCheckout,
+                  icon: const Icon(Icons.verified_outlined),
+                  label:
+                      const Text('I returned from checkout — verify payment'),
                 ),
               ],
             ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // ── Plans ────────────────────────────────────────────────────────
+          ],
+          const SizedBox(height: 16),
           _PlanCard(
             name: l10n.pricingBasic,
             price: l10n.pricingBasicPrice,
             description: l10n.pricingBasicDesc,
-            features: const [
-              '✅ Customer management',
-              '✅ Order tracking',
-              '✅ Dashboard',
-              '✅ Basic reports',
-              '✅ Amharic + English',
-              '❌ Staff management',
-              '❌ Inventory',
-              '❌ Financial reports',
-            ],
-            color: Colors.blue.shade600,
-            isPopular: false,
-            onBuy: () => _showPaymentInstructions(context, l10n.pricingBasic, l10n.pricingBasicPrice),
+            icon: Icons.storefront_outlined,
+            onChoose: _isLoading ||
+                    _pendingMerchantReference != null ||
+                    !_service.isConfigured
+                ? null
+                : () => _startCheckout('basic'),
           ),
-
           const SizedBox(height: 12),
-
           _PlanCard(
             name: l10n.pricingPro,
             price: l10n.pricingProPrice,
             description: l10n.pricingProDesc,
-            features: const [
-              '✅ Everything in Basic',
-              '✅ Staff management',
-              '✅ Inventory tracking',
-              '✅ Financial reports',
-              '✅ Appointments',
-              '✅ Payment recording',
-              '✅ Billing & Invoices',
-              '✅ Notifications',
-            ],
-            color: const Color(0xFF8B5CF6),
-            isPopular: true,
-            popularLabel: l10n.pricingPopular,
-            onBuy: () => _showPaymentInstructions(context, l10n.pricingPro, l10n.pricingProPrice),
+            icon: Icons.workspace_premium_outlined,
+            highlighted: true,
+            onChoose: _isLoading ||
+                    _pendingMerchantReference != null ||
+                    !_service.isConfigured
+                ? null
+                : () => _startCheckout('pro'),
           ),
-
           const SizedBox(height: 12),
-
           _PlanCard(
             name: l10n.pricingEnterprise,
             price: l10n.pricingEnterprisePrice,
             description: l10n.pricingEnterpriseDesc,
-            features: const [
-              '✅ Everything in Pro',
-              '✅ 2 device licenses',
-              '✅ Priority support',
-              '✅ 1 year free updates',
-              '✅ Setup assistance',
-              '✅ Training session',
-            ],
-            color: Colors.orange.shade700,
-            isPopular: false,
-            onBuy: () => _showPaymentInstructions(context, l10n.pricingEnterprise, l10n.pricingEnterprisePrice),
+            icon: Icons.business_outlined,
+            onChoose: _isLoading ||
+                    _pendingMerchantReference != null ||
+                    !_service.isConfigured
+                ? null
+                : () => _startCheckout('enterprise'),
           ),
-
-          const SizedBox(height: 24),
-
-          // ── Device ID Section ────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.phone_android, color: Color(0xFF8B5CF6)),
-                    SizedBox(width: 8),
-                    Text(
-                      'Your Device ID',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'You need this to get your license key. Copy it and send to our Telegram after payment.',
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _deviceId.isEmpty ? 'Loading...' : _deviceId,
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          _copied ? Icons.check_circle : Icons.copy,
-                          color: _copied ? Colors.green : const Color(0xFF8B5CF6),
-                        ),
-                        onPressed: _copyDeviceId,
-                        tooltip: 'Copy Device ID',
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.telegram),
-                    label: Text(l10n.shareOnTelegram),
-                    onPressed: () => _openTelegram(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF0088CC),
-                      side: const BorderSide(color: Color(0xFF0088CC)),
-                    ),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 16),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.phone_android),
+              title: const Text('Device ID'),
+              subtitle: SelectableText(
+                _deviceId.isEmpty ? 'Loading…' : _deviceId,
+              ),
+              trailing: IconButton(
+                tooltip: 'Copy device ID',
+                icon: const Icon(Icons.copy),
+                onPressed:
+                    _deviceId.isEmpty ? null : () => _copyDeviceId(context),
+              ),
             ),
           ),
-
-          const SizedBox(height: 24),
-
-          // ── Payment Instructions ─────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0FDF4),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.green.shade200),
+          if (!_service.isConfigured) ...[
+            const SizedBox(height: 12),
+            const _StatusMessage(
+              icon: Icons.info_outline,
+              text:
+                  'Chapa checkout is not connected yet. Configure SUBSCRIPTION_API_URL with the secure billing backend before accepting payments.',
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Colors.green.shade700),
-                    const SizedBox(width: 8),
-                    Text(
-                      l10n.paymentInstructionsTitle,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.green.shade800,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _StepTile(text: l10n.paymentStep1),
-                _StepTile(text: l10n.paymentStep2),
-                _StepTile(text: l10n.paymentStep3),
-                _StepTile(text: l10n.paymentStep4),
-                _StepTile(text: l10n.paymentStep5),
-              ],
+          ],
+          if (_error != null && _service.isConfigured) ...[
+            const SizedBox(height: 12),
+            _StatusMessage(
+              icon: Icons.error_outline,
+              text: _error!,
+              isError: true,
             ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // ── Payment Methods ──────────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Payment Methods',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 12),
-                _PaymentMethodTile(
-                  icon: '💳',
-                  name: 'TeleBirr',
-                  detail: '+251-912-345-678',
-                  color: Colors.blue.shade50,
-                ),
-                const SizedBox(height: 8),
-                _PaymentMethodTile(
-                  icon: '🏦',
-                  name: 'CBE Birr',
-                  detail: '1000123456789',
-                  color: Colors.green.shade50,
-                ),
-                const SizedBox(height: 8),
-                _PaymentMethodTile(
-                  icon: '💬',
-                  name: 'Telegram',
-                  detail: 't.me/TailorSystemET',
-                  color: Colors.lightBlue.shade50,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 32),
+          ],
+          if (_isLoading) ...[
+            const SizedBox(height: 16),
+            const Center(child: CircularProgressIndicator()),
+          ],
         ],
       ),
     );
   }
 
-  void _showPaymentInstructions(BuildContext context, String plan, String price) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Buy $plan — $price',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'To complete your purchase:',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 12),
-            _StepTile(text: '1. Send $price to TeleBirr: +251-912-345-678'),
-            _StepTile(text: '2. Take a screenshot of the payment'),
-            _StepTile(text: '3. Copy your Device ID (button below)'),
-            _StepTile(text: '4. Send screenshot + Device ID + shop name to t.me/TailorSystemET'),
-            _StepTile(text: '5. Get your license key within 24 hours'),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.copy),
-                    label: const Text('Copy Device ID'),
-                    onPressed: () async {
-                      await Clipboard.setData(ClipboardData(text: _deviceId));
-                      if (!context.mounted) return;
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Device ID copied!'),
-                          backgroundColor: Colors.green.shade700,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton.icon(
-                    icon: const Icon(Icons.telegram),
-                    label: const Text('Open Telegram'),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _openTelegram(context);
-                    },
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF0088CC),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
+  Widget _subscriptionCard(BuildContext context) {
+    if (!_service.isConfigured) {
+      return const Card(
+        child: ListTile(
+          leading: Icon(Icons.pending_outlined),
+          title: Text('Subscription status unavailable'),
+          subtitle: Text('Connect the billing backend to check your plan.'),
         ),
+      );
+    }
+    final status = _status;
+    if (status == null) {
+      return Card(
+        child: ListTile(
+          leading: const Icon(Icons.hourglass_empty),
+          title: Text(_isLoading ? 'Checking subscription…' : 'No active plan'),
+          subtitle: const Text('Select a plan below to continue.'),
+        ),
+      );
+    }
+
+    return Card(
+      child: ListTile(
+        leading: Icon(
+          status.isActive ? Icons.verified : Icons.info_outline,
+          color: status.isActive
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        title: Text(status.isActive
+            ? 'Active ${status.planId ?? ''} subscription'
+            : 'No active subscription'),
+        subtitle: Text(status.expiresAt == null
+            ? 'Choose a plan below to subscribe.'
+            : 'Valid until ${MaterialLocalizations.of(context).formatMediumDate(status.expiresAt!)}'),
       ),
     );
   }
-}
 
-// ── Helper Widgets ─────────────────────────────────────────────────────────────
+  Future<void> _copyDeviceId(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: _deviceId));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Device ID copied.')),
+    );
+  }
+}
 
 class _PlanCard extends StatelessWidget {
   const _PlanCard({
     required this.name,
     required this.price,
     required this.description,
-    required this.features,
-    required this.color,
-    required this.isPopular,
-    required this.onBuy,
-    this.popularLabel,
+    required this.icon,
+    required this.onChoose,
+    this.highlighted = false,
   });
 
   final String name;
   final String price;
   final String description;
-  final List<String> features;
-  final Color color;
-  final bool isPopular;
-  final String? popularLabel;
-  final VoidCallback onBuy;
+  final IconData icon;
+  final VoidCallback? onChoose;
+  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isPopular ? color : const Color(0xFFE2E8F0),
-          width: isPopular ? 2.5 : 1,
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: highlighted ? colors.primary : colors.outlineVariant,
+          width: highlighted ? 2 : 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(isPopular ? 0.15 : 0.05),
-            blurRadius: isPopular ? 20 : 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-            ),
-            child: Row(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
+                Icon(icon, color: colors.primary),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (isPopular && popularLabel != null)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            popularLabel!,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
-                      ),
-                      Text(
-                        description,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    name,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      price.split('/').first.trim(),
-                      style: TextStyle(
-                        fontSize: 22,
+                Text(
+                  price,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: colors.primary,
                         fontWeight: FontWeight.bold,
-                        color: color,
                       ),
-                    ),
-                    if (price.contains('/'))
-                      Text(
-                        '/ ${price.split('/').last.trim()}',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                  ],
                 ),
               ],
             ),
-          ),
-          // Features
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Column(
-              children: features
-                  .map((f) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 3),
-                        child: Row(
-                          children: [
-                            Text(f.substring(0, 2), style: const TextStyle(fontSize: 14)),
-                            const SizedBox(width: 6),
-                            Text(
-                              f.substring(2),
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: f.startsWith('❌') ? Colors.grey : Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ))
-                  .toList(),
-            ),
-          ),
-          // Buy button
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
+            const SizedBox(height: 8),
+            Text(description),
+            const SizedBox(height: 14),
+            SizedBox(
               width: double.infinity,
-              child: FilledButton(
-                onPressed: onBuy,
-                style: FilledButton.styleFrom(backgroundColor: color),
-                child: const Text(
-                  'Buy This Plan',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+              child: FilledButton.icon(
+                onPressed: onChoose,
+                icon: const Icon(Icons.lock_outline),
+                label: Text('Continue with $name'),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _StepTile extends StatelessWidget {
-  const _StepTile({required this.text});
-  final String text;
+class _StatusMessage extends StatelessWidget {
+  const _StatusMessage({
+    required this.icon,
+    required this.text,
+    this.isError = false,
+  });
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Text(text, style: const TextStyle(fontSize: 13, height: 1.4)),
-    );
-  }
-}
-
-class _InfoTile extends StatelessWidget {
-  const _InfoTile({required this.icon, required this.text});
   final IconData icon;
   final String text;
+  final bool isError;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: const Color(0xFF8B5CF6)),
-          const SizedBox(width: 8),
-          Text(text, style: const TextStyle(fontSize: 13)),
-        ],
-      ),
-    );
-  }
-}
-
-class _PaymentMethodTile extends StatelessWidget {
-  const _PaymentMethodTile({
-    required this.icon,
-    required this.name,
-    required this.detail,
-    required this.color,
-  });
-  final String icon;
-  final String name;
-  final String detail;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 22)),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 14)),
-                Text(detail,
-                    style:
-                        const TextStyle(fontSize: 13, color: Colors.black54)),
-              ],
-            ),
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      color: isError ? colors.errorContainer : colors.secondaryContainer,
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color:
+              isError ? colors.onErrorContainer : colors.onSecondaryContainer,
+        ),
+        title: Text(
+          text,
+          style: TextStyle(
+            color:
+                isError ? colors.onErrorContainer : colors.onSecondaryContainer,
           ),
-          IconButton(
-            icon: const Icon(Icons.copy, size: 18),
-            onPressed: () async {
-              await Clipboard.setData(ClipboardData(text: detail));
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('$name number copied!'),
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: Colors.green.shade700,
-                ),
-              );
-            },
-          ),
-        ],
+        ),
       ),
     );
   }

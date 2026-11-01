@@ -81,6 +81,8 @@ local_database/
 config/secrets/
 secrets/
 private_config/
+backend/service-account*.json
+backend/credentials/
 
 # =============================================================================
 # BUSINESS SENSITIVE FILES
@@ -146,6 +148,8 @@ $RECYCLE.BIN/
 *.freezed.dart
 *.gr.dart
 lib/generated_plugin_registrant.dart
+# Generated Android build reports
+android/build/reports/
 
 # l10n Generated Files (keep source .arb files, ignore generated)
 lib/l10n/app_localizations*.dart
@@ -216,3 +220,11 @@ docs/build/
 # AI Assistant Generated Files
 .agents/
 .kiro/
+
+# Backend dependencies
+backend/node_modules/
+
+# Firebase and payment credentials
+backend/.env
+backend/*serviceAccount*.json
+serviceAccountKey.json

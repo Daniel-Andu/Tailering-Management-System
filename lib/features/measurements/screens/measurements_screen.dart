@@ -37,7 +37,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen>
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(l10n.measurementsTitle),
         bottom: TabBar(
@@ -211,7 +211,7 @@ class _ClothTypePanel extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      color: Colors.white,
+      color: theme.colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -230,7 +230,7 @@ class _ClothTypePanel extends StatelessWidget {
                 final isSelected = item['id'] == selectedId;
                 return ListTile(
                   selected: isSelected,
-                  selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
+                  selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.1),
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
@@ -276,7 +276,7 @@ class _TemplatePanel extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      color: const Color(0xFFFAFAFA),
+      color: theme.colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -304,7 +304,7 @@ class _TemplatePanel extends StatelessWidget {
                       return ListTile(
                         selected: isSelected,
                         selectedTileColor:
-                            theme.colorScheme.primary.withOpacity(0.1),
+                            theme.colorScheme.primary.withValues(alpha: 0.1),
                         title: Text('${item['name']}',
                             style: TextStyle(
                                 fontWeight: isSelected
@@ -369,7 +369,7 @@ class _FieldPanel extends StatelessWidget {
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor:
-                        theme.colorScheme.primary.withOpacity(0.12),
+                        theme.colorScheme.primary.withValues(alpha: 0.12),
                     child: Text(
                       '${index + 1}',
                       style: TextStyle(
@@ -454,7 +454,7 @@ class _CustomFieldsTab extends StatelessWidget {
     return Consumer<MeasurementProvider>(
       builder: (context, provider, _) {
         return Scaffold(
-          backgroundColor: const Color(0xFFF8FAFC),
+          backgroundColor: theme.scaffoldBackgroundColor,
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => _showAddFieldDialog(context, provider),
             icon: const Icon(Icons.add),
@@ -470,13 +470,13 @@ class _CustomFieldsTab extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      theme.colorScheme.primary.withOpacity(0.08),
-                      theme.colorScheme.tertiary.withOpacity(0.06),
+                      theme.colorScheme.primary.withValues(alpha: 0.08),
+                      theme.colorScheme.tertiary.withValues(alpha: 0.06),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                      color: theme.colorScheme.primary.withOpacity(0.2)),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   children: [

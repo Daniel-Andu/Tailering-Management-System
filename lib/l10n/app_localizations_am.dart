@@ -273,6 +273,15 @@ class AppLocalizationsAm extends AppLocalizations {
   String get orderListRefresh => 'እንደገና መጀመሪያ';
 
   @override
+  String get orderListNoOrders => 'ምንም ትዕዛዝ አልተገኘም';
+
+  @override
+  String get orderListPaymentStatus => 'የክፍያ ሁኔታ';
+
+  @override
+  String get orderListPaymentMethod => 'የክፍያ ዘዴ';
+
+  @override
   String get appointmentScreenTitle => 'ቀጠሮዎች';
 
   @override
@@ -333,27 +342,6 @@ class AppLocalizationsAm extends AppLocalizations {
   String get appointmentUpdatedMessage => 'ቀጠሮው በተሳካ ሁኔታ ተሻሽሏል';
 
   @override
-  String get inventoryRefresh => 'እንደገና መጀመሪያ';
-
-  @override
-  String get inventoryNewItem => 'አዲስ እቃ';
-
-  @override
-  String get inventoryNoItems => 'እቃዎች አልተገኙም';
-
-  @override
-  String get inventoryDialogTitle => 'እቃ ይጨምሩ';
-
-  @override
-  String get inventoryCategory => 'ምድብ';
-
-  @override
-  String get inventoryUnit => 'እርስ';
-
-  @override
-  String get inventoryReorderLevel => 'የደጋግሞ ደረጃ';
-
-  @override
   String get inventoryTitle => 'እቃዎች';
 
   @override
@@ -387,6 +375,27 @@ class AppLocalizationsAm extends AppLocalizations {
   String get inventoryUpdatedMessage => 'እቃው በተሳካ ሁኔታ ተሻሽሏል';
 
   @override
+  String get inventoryRefresh => 'እንደገና መጀመሪያ';
+
+  @override
+  String get inventoryNewItem => 'አዲስ እቃ';
+
+  @override
+  String get inventoryNoItems => 'እቃዎች አልተገኙም';
+
+  @override
+  String get inventoryDialogTitle => 'እቃ ይጨምሩ';
+
+  @override
+  String get inventoryCategory => 'ምድብ';
+
+  @override
+  String get inventoryUnit => 'እርስ';
+
+  @override
+  String get inventoryReorderLevel => 'የደጋግሞ ደረጃ';
+
+  @override
   String get orderListFilterByStatus => 'በሁኔታ ማጣሪያ';
 
   @override
@@ -412,15 +421,6 @@ class AppLocalizationsAm extends AppLocalizations {
 
   @override
   String get orderListPrice => 'ዋጋ';
-
-  @override
-  String get orderListPaymentStatus => 'Payment Status';
-
-  @override
-  String get orderListPaymentMethod => 'Payment Method';
-
-  @override
-  String get orderListNoOrders => 'No orders found';
 
   @override
   String get orderListStatus => 'ሁኔታ';
@@ -543,8 +543,7 @@ class AppLocalizationsAm extends AppLocalizations {
   String get licenseContact => 'ፈቃድ ያስፈልጋሉ? ያግኙን';
 
   @override
-  String get licenseContactInfo =>
-      'ኢሜይል: your-email@example.com\nስልክ: +XXX-XXX-XXX';
+  String get licenseContactInfo => 'ኢሜይል: your-email@example.com\nስልክ: +XXX-XXX-XXX';
 
   @override
   String get licenseInvalidKey => 'የማይሰራ የፈቃድ ቁልፍ';
@@ -916,276 +915,491 @@ class AppLocalizationsAm extends AppLocalizations {
   String get orderDetailNoMessagesQueued => 'ምንም በመጠባበቅ ላይ ያሉ መልእክቶች የሉም';
 
   @override
+  String get commonCancel => 'ሰርዝ';
+
+  @override
+  String get commonSave => 'አስቀምጥ';
+
+  @override
+  String get commonDelete => 'ሰርዝ';
+
+  @override
+  String get commonEdit => 'አርትዕ';
+
+  @override
+  String get commonAdd => 'ጨምር';
+
+  @override
+  String get commonClose => 'ዝጋ';
+
+  @override
+  String get commonOk => 'እሺ';
+
+  @override
+  String get commonYes => 'አዎ';
+
+  @override
+  String get commonNo => 'አይደለም';
+
+  @override
+  String get commonBack => 'ተመለስ';
+
+  @override
+  String get commonNext => 'ቀጣዩ';
+
+  @override
+  String get commonPrevious => 'ቀዳሚው';
+
+  @override
+  String get commonSubmit => 'ያስገቡ';
+
+  @override
+  String get commonRefresh => 'አንደገና አስጀምር';
+
+  @override
+  String get commonSearch => 'ፈልግ';
+
+  @override
+  String get commonFilter => 'ማጣሪያ';
+
+  @override
+  String get commonSort => 'ደርድር';
+
+  @override
+  String get commonExport => 'ልክ ውሰድ';
+
+  @override
+  String get commonImport => 'ወደ ውስጥ ተወስድ';
+
+  @override
+  String get commonPrint => 'ታተም';
+
+  @override
+  String get commonDownload => 'አውርድ';
+
+  @override
+  String get commonUpload => 'ወደ ላይ ሠራ';
+
+  @override
+  String get commonSelectAll => 'ሁሉንም ምረጥ';
+
+  @override
+  String get commonDeselectAll => 'ሁሉንም ይምረጡ';
+
+  @override
+  String get formRequired => 'ይህ መስክ ያስፈልጋል';
+
+  @override
+  String get formInvalidEmail => 'እባክዎን ትክክለኛ ኢሜይል ያስገቡ';
+
+  @override
+  String get formInvalidPhone => 'እባክዎን ትክክለኛ ስልክ ያስገቡ';
+
+  @override
+  String get formInvalidNumber => 'እባክዎን ትክክለኛ ቁጥር ያስገቡ';
+
+  @override
+  String get editCustomerTitle => 'ደንበኛ አርትዕ';
+
+  @override
+  String get editOrderTitle => 'ትዕዛዛ አርትዕ';
+
+  @override
+  String get customerIdRequired => 'የደንበኛ ID ያስፈልጋል';
+
+  @override
+  String get customerIdInvalid => 'ልክ ያልሆነ የደንበኛ ID';
+
+  @override
+  String get businessNameInvalid => 'ልክ ያልሆነ የንግድ ስም';
+
+  @override
+  String get emailInvalid => 'ልክ ያልሆነ ኢሜይል አድራሻ';
+
+  @override
+  String get phoneInvalid => 'ልክ ያልሆነ ስልክ ቁጥር';
+
+  @override
+  String get clothTypeRequired => 'የልብስ ዓይነት ያስፈልጋል';
+
+  @override
+  String get priceRequired => 'ዋጋ ያስፈልጋል';
+
+  @override
+  String get priceInvalid => 'ዋጋ ትክክለኛ ቁጥር መሆን አለበት';
+
+  @override
+  String get deliveryDateRequired => 'የመልተኛ ቀን ያስፈልጋል';
+
+  @override
+  String get statusRequired => 'ሁኔታ ያስፈልጋል';
+
+  @override
+  String get measurementChestRequired => 'የደረት መለኪያ ያስፈልጋል';
+
+  @override
+  String get measurementWaistRequired => 'የአንገት መለኪያ ያስፈልጋል';
+
+  @override
+  String get measurementLengthRequired => 'ርዝመት መለኪያ ያስፈልጋል';
+
+  @override
+  String get successfullySaved => 'በተሳካ ሁኔታ ተቀምጧል';
+
+  @override
+  String get successfullyUpdated => 'በተሳካ ሁኔታ ተሻሽሏል';
+
+  @override
+  String get successfullyDeleted => 'በተሳካ ሁኔታ ተሰርዟል';
+
+  @override
+  String get errorSaving => 'ዳታ ማስቀመጥ ስህተት';
+
+  @override
+  String get errorUpdating => 'ዳታ ማሻሻል ስህተት';
+
+  @override
+  String get errorDeleting => 'ዳታ ማጥፊያ ስህተት';
+
+  @override
+  String get errorLoading => 'ዳታ መጫን ስህተት';
+
+  @override
+  String get confirmDeleteTitle => 'ማሰረዝ ማረጋገጫ';
+
+  @override
+  String get confirmDeleteMessage => 'ይህን ንጥል በእውነቱ መሰረዛት ይፈልጋሉ?';
+
+  @override
+  String get changeLanguage => 'ቋንቋ ለውጥ';
+
+  @override
+  String get selectLanguage => 'ቋንቋ ይምረጡ';
+
+  @override
   String get measurementsTitle => 'መለኪያዎች';
+
   @override
   String get measurementsTemplates => 'ቅጾች';
+
   @override
   String get measurementsCustomFields => 'ተጨማሪ መለኪያዎች';
+
   @override
   String get measurementsClothTypes => 'የልብስ ዓይነቶች';
+
   @override
   String get measurementsSelectClothType => 'የልብስ ዓይነት ይምረጡ';
+
   @override
   String get measurementsSelectTemplate => 'ቅጽ ይምረጡ';
+
   @override
   String get measurementsFields => 'የመለኪያ ዝርዝሮች';
+
   @override
   String get measurementsAddCustomField => 'ተጨማሪ መለኪያ ይጨምሩ';
+
   @override
   String get measurementsEditCustomField => 'መለኪያ ያስተካክሉ';
+
   @override
   String get measurementsFieldName => 'የመለኪያ ስም';
+
   @override
   String get measurementsFieldNameHint => 'ምሳሌ፦ ክብ ክንድ፣ ጭን፣ ጀርባ ርዝመት';
+
   @override
   String get measurementsUnit => 'አሃድ';
+
   @override
   String get measurementsUnitHint => 'ሴሜ / ኢንች';
+
   @override
   String get measurementsNoCustomFields => 'ምንም ተጨማሪ መለኪያዎች የሉም';
+
   @override
   String get measurementsNoCustomFieldsHint => '+ ን ጫን ተጨማሪ መለኪያ ለመጨምር';
+
   @override
   String get measurementsDeleteField => 'መለኪያ ሰርዝ';
+
   @override
   String get measurementsDeleteFieldConfirm => 'ይህን ተጨማሪ የመለኪያ ዝርዝር ማጥፋት ይፈልጋሉ?';
+
   @override
   String get measurementsCustomFieldInfo => 'እዚህ ላይ የራስዎን ተጨማሪ የመለኪያ ዝርዝሮች ይጨምሩ። ትዕዛዝ ሲፈጥሩ ከዋናዎቹ ጎን ይታያሉ።';
 
   @override
   String get dashboardDueToday => 'ዛሬ የሚደርሱ';
+
   @override
   String get dashboardDelayed => 'ዘገዩ';
+
   @override
   String get dashboardReady => 'ዝግጁ';
+
   @override
   String get dashboardOpenOrders => 'ክፍት ትዕዛዞች';
+
   @override
   String get dashboardCustomers => 'ደንበኞች';
+
   @override
   String get dashboardUnpaid => 'ያልተከፈለ';
+
   @override
   String get dashboardTodayPaid => 'ዛሬ የተከፈለ';
+
   @override
   String get dashboardMonthPaid => 'ወር የተከፈለ';
+
   @override
-  String get dashboardDueSoon => 'ቶሎ ይደርሳሉ';
+  String get dashboardDueSoon => '近 近 ይደርሳሉ';
+
   @override
   String get dashboardUnpaidBalances => 'ያልተከፈሉ ቀሪዎች';
+
   @override
   String get dashboardNoRecords => 'ምንም መዝገቦች የሉም';
 
   @override
   String get licenseYourDeviceId => 'የእርስዎ መሣሪያ ID:';
+
   @override
   String get licenseCopyDeviceId => 'ID ቅዳ';
+
   @override
   String get licenseDeviceIdCopied => 'Device ID ተቀድቷል';
+
   @override
   String get licenseShareDeviceId => 'ፈቃድ ቁልፍ ለማግኘት ይህን Device ID ለፕሮግራሙ አቅራቢ ያካፍሉ';
+
   @override
   String get licenseCompanyName => 'የኩባንያ ስም';
+
   @override
   String get licenseCompanyNameHint => 'የልብስ ስፌት ቤቱን ስም ያስገቡ';
-  @override
-  String get licenseFullLicense => 'ሙሉ ፈቃድ';
-  @override
-  String get licenseTrialVersion => 'ሙከራ ስሪት';
-  @override
-  String get licenseDaysRemaining => 'ቀናት ይቀራሉ';
-  @override
-  String get licenseStatus => 'ሁኔታ';
-  @override
-  String get licenseActive => 'ንቁ';
-  @override
-  String get licenseExpired => 'ጊዜ ያለፈው';
-  @override
-  String get licenseDeviceMismatch => 'መሣሪያ አይዛመድም';
-  @override
-  String get licenseType => 'የፈቃድ ዓይነት';
-  @override
-  String get licenseCompany => 'ኩባንያ';
-  @override
-  String get licenseDeviceId => 'Device ID';
 
   @override
   String get appointmentDetails => 'የቀጠሮ ዝርዝሮች';
+
   @override
   String get appointmentAdditionalNotes => 'ተጨማሪ ማስታወሻዎች';
 
   @override
   String get settingsLanguage => 'ቋንቋ';
+
   @override
   String get settingsEnglish => 'English';
+
   @override
   String get settingsAmharic => 'አማርኛ';
+
   @override
   String get settingsTheme => 'ዲዛይን';
+
   @override
   String get settingsAbout => 'ስለ ፕሮግራሙ';
+
   @override
   String get settingsVersion => 'ስሪት';
+
+  @override
+  String get licenseFullLicense => 'ሙሉ ፈቃድ';
+
+  @override
+  String get licenseTrialVersion => 'ሙከራ ስሪት';
+
+  @override
+  String get licenseDaysRemaining => 'ቀናት ይቀራሉ';
+
+  @override
+  String get licenseStatus => 'ሁኔታ';
+
+  @override
+  String get licenseActive => 'ንቁ';
+
+  @override
+  String get licenseExpired => 'ጊዜ ያለፈው';
+
+  @override
+  String get licenseDeviceMismatch => 'መሣሪያ አይዛመድም';
+
+  @override
+  String get licenseType => 'የፈቃድ ዓይነት';
+
+  @override
+  String get licenseCompany => 'ኩባንያ';
+
+  @override
+  String get licenseDeviceId => 'Device ID';
+
+  @override
+  String get orderDetailClothType => 'የልብስ ዓይነት';
+
+  @override
+  String get orderDetailMeasurements => 'መለኪያዎች';
+
+  @override
+  String get orderDetailNotesSectionTitle => 'ማስታወሻዎች';
+
+  @override
+  String get orderDetailAssignedStaff => 'የተሰጠ ሰራተኛ';
+
+  @override
+  String get orderDetailCreated => 'ተፈጥሯ';
+
+  @override
+  String get orderDetailUpdated => 'ተሻሽሏ';
 
   @override
   String get commonETB => 'ብር';
 
   @override
   String get businessContactTitle => 'ፈቃድ ያግኙ';
+
   @override
   String get businessContactBody => 'ለልብስ ስፌት ቤቱ ፈቃድ ለመግዛት ያግኙን።';
-  @override
-  String get businessPhone => '📞 +251-XXX-XXX-XXXX';
-  @override
-  String get businessEmail => '📧 tailorsystem@example.com';
-  @override
-  String get businessTelegram => '💬 t.me/tailorsystem';
-
-  // ── Common (additional) ────────────────────────────────────────────────
-  @override
-  String get commonCancel => 'ሰርዝ';
-  @override
-  String get commonSave => 'አስቀምጥ';
-  @override
-  String get commonDelete => 'ሰርዝ';
-  @override
-  String get commonEdit => 'አርትዕ';
-  @override
-  String get commonAdd => 'ጨምር';
-  @override
-  String get commonClose => 'ዝጋ';
-  @override
-  String get commonOk => 'እሺ';
-  @override
-  String get commonYes => 'አዎ';
-  @override
-  String get commonNo => 'አይደለም';
-  @override
-  String get commonBack => 'ተመለስ';
-  @override
-  String get commonNext => 'ቀጣዩ';
-  @override
-  String get commonPrevious => 'ቀዳሚው';
-  @override
-  String get commonSubmit => 'ያስገቡ';
-  @override
-  String get commonRefresh => 'አንደገና አስጀምር';
-  @override
-  String get commonSearch => 'ፈልግ';
-  @override
-  String get commonFilter => 'ማጣሪያ';
-  @override
-  String get commonSort => 'ደርድር';
-  @override
-  String get commonExport => 'ልክ ውሰድ';
-  @override
-  String get commonImport => 'ወደ ውስጥ ተወስድ';
-  @override
-  String get commonPrint => 'ታተም';
-  @override
-  String get commonDownload => 'አውርድ';
-  @override
-  String get commonUpload => 'ወደ ላይ ሠራ';
-  @override
-  String get commonSelectAll => 'ሁሉንም ምረጥ';
-  @override
-  String get commonDeselectAll => 'ሁሉንም ይምረጡ';
 
   @override
-  String get formRequired => 'ይህ መስክ ያስፈልጋል';
-  @override
-  String get formInvalidEmail => 'እባክዎን ትክክለኛ ኢሜይል ያስገቡ';
-  @override
-  String get formInvalidPhone => 'እባክዎን ትክክለኛ ስልክ ያስገቡ';
-  @override
-  String get formInvalidNumber => 'እባክዎን ትክክለኛ ቁጥር ያስገቡ';
+  String get businessPhone => '📞 +251-912-345-678';
 
-  // ── New localized values ──────────────────────────────────────────────────
+  @override
+  String get businessEmail => '📧 danieltailorsystem@gmail.com';
+
+  @override
+  String get businessTelegram => '💬 t.me/TailorSystemET';
+
   @override
   String get genderMale => 'ወንድ';
+
   @override
   String get genderFemale => 'ሴት';
+
   @override
   String get priorityLow => 'ዝቅተኛ';
+
   @override
   String get priorityNormal => 'መደበኛ';
+
   @override
   String get priorityHigh => 'ከፍተኛ';
+
   @override
   String get urgencyNormal => 'መደበኛ';
+
   @override
   String get urgencyUrgent => 'አስቸኳይ';
+
   @override
   String get urgencyExpress => 'ፈጣን';
+
   @override
   String get paymentCash => 'ጥሬ ገንዘብ';
+
   @override
   String get paymentBank => 'ባንክ';
+
   @override
   String get paymentTelebirr => 'ቴሌብር';
+
   @override
   String get paymentCbeBirr => 'ሲቢኢ ብር';
+
   @override
   String get paymentChapa => 'ቻፓ';
+
+  @override
+  String get paymentChapaUnavailable => 'የቻፓ የትዕዛዝ ክፍያ ገና አልተገናኘም';
+
   @override
   String get paymentMobileMoney => 'ሞባይል ሚኒ';
+
   @override
   String get recordPaymentTitle => 'ክፍያ መዝገብ';
+
   @override
   String get paymentAmount => 'መጠን';
+
   @override
   String get paymentMethod => 'የክፍያ ዘዴ';
+
   @override
   String get paymentReference => 'ማመልከቻ / የግብይት ID';
+
   @override
   String get orderCreatedSuccess => 'ትዕዛዙ በተሳካ ሁኔታ ተፈጥሯል';
+
   @override
   String get noCustomersFound => 'ምንም ደንበኞች አልተገኙም';
+
   @override
   String get pleaseSelectCustomer => 'እባክዎን ደንበኛ ይምረጡ';
+
   @override
   String get pleaseEnterValidCustomerId => 'እባክዎን ትክክለኛ የደንበኛ ID እና ዋጋ ያስገቡ';
 
-  // ── Monetization ─────────────────────────────────────────────────────────
   @override
   String get businessTelebirr => '💳 ቴሌብር: +251-912-345-678';
+
   @override
   String get businessCbeBirr => '🏦 ሲቢኢ ብር: 1000123456789';
+
   @override
   String get pricingTitle => 'ዕቅድ ይምረጡ';
+
   @override
   String get pricingBasic => 'መሰረታዊ';
+
   @override
   String get pricingPro => 'ፕሮፌሽናል';
+
   @override
   String get pricingEnterprise => 'ኢንተርፕራይዝ';
+
   @override
   String get pricingBasicPrice => '500 ብር / ዓመት';
+
   @override
   String get pricingProPrice => '1,200 ብር / ዓመት';
+
   @override
   String get pricingEnterprisePrice => '2,500 ብር / ዓመት';
+
   @override
   String get pricingBasicDesc => '1 መሣሪያ • ደንበኞች እና ትዕዛዞች • መሰረታዊ ሪፖርቶች';
+
   @override
   String get pricingProDesc => 'ሁሉም ባህሪያት • ሰራተኞች • እቃዎች • የፋይናንስ ሪፖርቶች';
+
   @override
   String get pricingEnterpriseDesc => '2 መሣሪያዎች • ሁሉም ፕሮ ባህሪያት • 1 ዓመት ዝማኔ እና ድጋፍ';
+
   @override
   String get pricingBuyNow => 'ይህን ዕቅድ ይግዙ';
+
   @override
   String get pricingPopular => 'በጣም ታዋቂ';
+
   @override
   String get paymentInstructionsTitle => 'እንዴት መክፈል እንደሚቻል';
+
   @override
   String get paymentStep1 => '1. ዕቅድ ይምረጡ እና ዋጋውን ይያዙ';
+
   @override
   String get paymentStep2 => '2. ቴሌብር ወይም ሲቢኢ ብርን በመጠቀም ክፍያ ይፈጽሙ';
+
   @override
   String get paymentStep3 => '3. Device ID ቅዳ እና የክፍያ ስክሪንሾት ወደ ቴሌግራም ላኩ';
+
   @override
   String get paymentStep4 => '4. የፈቃድ ቁልፍ በ24 ሰዓት ውስጥ ይደርስዎታል';
+
   @override
   String get paymentStep5 => '5. ቁልፉን ያስገቡ እና ፈቃዱን ያንቁ';
+
   @override
   String get shareOnTelegram => 'ቴሌግራም ይክፈቱ';
 }

@@ -10,10 +10,12 @@ class ShopProfile {
   final String? city;
   final String? country;
   final String? businessType; // 'tailor', 'alteration', 'custom_design'
-  final String? specialization; // 'Men', 'Women', 'Both', 'Custom', 'Alterations'
+  final String?
+      specialization; // 'Men', 'Women', 'Both', 'Custom', 'Alterations'
   final int? yearsOfExperience;
   final String? currency;
   final String? language;
+  final String? profileImageUrl;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final bool isSetupComplete;
@@ -36,6 +38,7 @@ class ShopProfile {
     this.yearsOfExperience,
     this.currency,
     this.language,
+    this.profileImageUrl,
     required this.createdAt,
     this.updatedAt,
     this.isSetupComplete = false,
@@ -56,6 +59,7 @@ class ShopProfile {
       'yearsOfExperience': yearsOfExperience,
       'currency': currency,
       'language': language,
+      'profileImageUrl': profileImageUrl,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
       'isSetupComplete': isSetupComplete,
@@ -78,9 +82,11 @@ class ShopProfile {
       yearsOfExperience: map['yearsOfExperience'],
       currency: map['currency'],
       language: map['language'],
+      profileImageUrl: map['profileImageUrl'],
       createdAt: DateTime.parse(map['createdAt']),
-      updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
-      isSetupComplete: map['isSetupComplete'] ?? false,
+      updatedAt:
+          map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
+      isSetupComplete: map['isSetupComplete'] ?? true,
     );
   }
 
@@ -99,6 +105,7 @@ class ShopProfile {
     int? yearsOfExperience,
     String? currency,
     String? language,
+    String? profileImageUrl,
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isSetupComplete,
@@ -118,6 +125,7 @@ class ShopProfile {
       yearsOfExperience: yearsOfExperience ?? this.yearsOfExperience,
       currency: currency ?? this.currency,
       language: language ?? this.language,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isSetupComplete: isSetupComplete ?? this.isSetupComplete,

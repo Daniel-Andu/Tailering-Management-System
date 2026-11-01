@@ -14,8 +14,14 @@ class AppSettingsProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   Map<String, String?> get settings => Map.unmodifiable(_settings);
+  bool get isDarkMode => _settings['appearance.dark_mode'] == 'true';
 
   String? value(String key) => _settings[key];
+
+  Future<void> setDarkMode(bool enabled) => save(
+        'appearance.dark_mode',
+        enabled ? 'true' : 'false',
+      );
 
   Future<void> load() async {
     await _run(() async {
@@ -50,14 +56,25 @@ class AppSettingsProvider extends ChangeNotifier {
   Future<void> _run(Future<void> Function() action) async {
     _isLoading = true;
     _errorMessage = null;
-    notifyListeners();
+    _scheduleNotify();
+
     try {
       await action();
     } catch (error) {
       _errorMessage = error.toString();
     } finally {
       _isLoading = false;
-      notifyListeners();
+      _scheduleNotify();
     }
+  }
+
+  void _scheduleNotify() {
+    if (!hasListeners) return;
+
+    Future.microtask(() {
+      if (hasListeners) {
+        notifyListeners();
+      }
+    });
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tailoring_system/core/domain/order_status.dart';
@@ -6,6 +7,7 @@ import 'package:tailoring_system/features/appointments/providers/appointment_pro
 import 'package:tailoring_system/features/orders/providers/order_detail_provider.dart';
 import 'package:tailoring_system/features/orders/providers/order_workflow_provider.dart';
 import 'package:tailoring_system/features/payments/providers/payment_provider.dart';
+import 'package:tailoring_system/features/receipts/providers/receipt_provider.dart';
 import 'package:tailoring_system/l10n/app_localizations.dart';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -105,6 +107,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen>
                 order: order,
                 payments: provider.payments,
                 onRecordPayment: _recordPayment,
+                onViewReceipt: _showPaymentReceipt,
               ),
               _TimelineTab(history: provider.history),
               _AppointmentsTab(
@@ -154,12 +157,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen>
                 decoration:
                     InputDecoration(labelText: l10n.orderDetailPaymentMethod),
                 items: [
-                  DropdownMenuItem(value: 'cash', child: Text(l10n.paymentCash)),
-                  DropdownMenuItem(value: 'bank_transfer', child: Text(l10n.paymentBank)),
-                  DropdownMenuItem(value: 'telebirr', child: Text(l10n.paymentTelebirr)),
-                  DropdownMenuItem(value: 'cbe_birr', child: Text(l10n.paymentCbeBirr)),
-                  DropdownMenuItem(value: 'chapa', child: Text(l10n.paymentChapa)),
-                  DropdownMenuItem(value: 'mobile_money', child: Text(l10n.paymentMobileMoney)),
+                  DropdownMenuItem(
+                      value: 'cash', child: Text(l10n.paymentCash)),
+                  DropdownMenuItem(
+                      value: 'bank_transfer', child: Text(l10n.paymentBank)),
+                  DropdownMenuItem(
+                      value: 'telebirr', child: Text(l10n.paymentTelebirr)),
+                  DropdownMenuItem(
+                      value: 'cbe_birr', child: Text(l10n.paymentCbeBirr)),
+                  DropdownMenuItem(
+                    value: 'chapa',
+                    enabled: false,
+                    child: Text(l10n.paymentChapaUnavailable),
+                  ),
+                  DropdownMenuItem(
+                      value: 'mobile_money',
+                      child: Text(l10n.paymentMobileMoney)),
                 ],
                 onChanged: (value) {
                   if (value != null) setDialogState(() => method = value);
@@ -199,6 +212,52 @@ class _OrderDetailScreenState extends State<OrderDetailScreen>
           transactionReference: referenceController.text.trim(),
         );
     await _load();
+  }
+
+  Future<void> _showPaymentReceipt(int paymentId) async {
+    final provider = context.read<ReceiptProvider>();
+    await provider.loadReceipt(
+      paymentId,
+      languageCode: Localizations.localeOf(context).languageCode,
+    );
+    if (!mounted) return;
+    final receipt = provider.plainTextReceipt;
+    if (receipt == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            provider.errorMessage ?? 'Receipt could not be loaded.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Payment receipt'),
+        content: SingleChildScrollView(child: SelectableText(receipt)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          FilledButton.icon(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: receipt));
+              if (!mounted || !context.mounted) return;
+              Navigator.pop(context);
+              ScaffoldMessenger.of(this.context).showSnackBar(
+                const SnackBar(content: Text('Receipt copied to clipboard.')),
+              );
+            },
+            icon: const Icon(Icons.copy),
+            label: const Text('Copy'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _createAppointment() async {
@@ -336,11 +395,13 @@ class _PaymentsTab extends StatelessWidget {
     required this.order,
     required this.payments,
     required this.onRecordPayment,
+    required this.onViewReceipt,
   });
 
   final Map<String, Object?> order;
   final List<Map<String, Object?>> payments;
   final Future<void> Function(Map<String, Object?> order) onRecordPayment;
+  final Future<void> Function(int paymentId) onViewReceipt;
 
   @override
   Widget build(BuildContext context) {
@@ -364,7 +425,13 @@ class _PaymentsTab extends StatelessWidget {
               subtitle: Text(
                 '${payment['payment_method']}  ${payment['paid_at']}',
               ),
-              trailing: Text('${payment['receipt_number'] ?? ''}'),
+              trailing: IconButton(
+                tooltip: 'View receipt',
+                onPressed: payment['id'] is int
+                    ? () => onViewReceipt(payment['id'] as int)
+                    : null,
+                icon: const Icon(Icons.receipt_long_outlined),
+              ),
             ),
       ],
     );

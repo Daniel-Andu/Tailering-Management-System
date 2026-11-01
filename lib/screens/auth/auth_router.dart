@@ -14,32 +14,20 @@ class AuthRouter extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
-        // Show splash while checking auth state
-        if (authProvider.user == null && authProvider.shopProfile == null) {
-          return FutureBuilder(
-            future: Future.delayed(const Duration(milliseconds: 500)),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return const LoginScreen();
-              }
-              return const SplashScreen();
-            },
-          );
+        if (!authProvider.isAuthInitialized ||
+            (authProvider.isLoading && authProvider.isShopProfileLoading)) {
+          return const SplashScreen();
         }
 
-        // User is authenticated
-        if (authProvider.isAuthenticated) {
-          // Check if shop onboarding is complete
-          if (!authProvider.isSetupComplete) {
-            return const OnboardingScreen();
-          }
-
-          // Go to main app
-          return const ProductionShellScreen();
+        if (!authProvider.isAuthenticated) {
+          return const LoginScreen();
         }
 
-        // Not authenticated - show login
-        return const LoginScreen();
+        if (authProvider.shouldShowOnboarding) {
+          return const OnboardingScreen();
+        }
+
+        return const ProductionShellScreen();
       },
     );
   }

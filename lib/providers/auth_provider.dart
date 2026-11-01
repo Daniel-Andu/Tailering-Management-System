@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:tailoring_system/services/auth_service.dart';
@@ -14,18 +17,27 @@ class AuthProvider extends ChangeNotifier {
   User? _user;
   ShopProfile? _shopProfile;
   bool _isLoading = false;
+  bool _isAuthInitialized = false;
+  bool _isShopProfileLoading = false;
+  bool _shouldShowOnboarding = false;
+  String? _shopProfileError;
+  int _shopProfileLoadId = 0;
   String? _errorMessage;
   bool _isEmailVerified = false;
 
   // Getters
   User? get user => _user;
-  User? get currentUser => _user;  // Alias for consistency
+  User? get currentUser => _user; // Alias for consistency
   ShopProfile? get shopProfile => _shopProfile;
   bool get isLoading => _isLoading;
+  bool get isAuthInitialized => _isAuthInitialized;
+  bool get isShopProfileLoading => _isShopProfileLoading;
+  String? get shopProfileError => _shopProfileError;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _user != null;
   bool get isSetupComplete => _shopProfile?.isSetupComplete ?? false;
   bool get isEmailVerified => _isEmailVerified;
+  bool get shouldShowOnboarding => _shouldShowOnboarding;
 
   AuthProvider() {
     print('🔧 AuthProvider: Initializing...');
@@ -35,7 +47,7 @@ class AuthProvider extends ChangeNotifier {
   /// Initialize auth state listener
   void _initAuth() {
     print('🔧 AuthProvider: Setting up auth state listener...');
-    
+
     // First check current user immediately
     _user = _authService.currentUser;
     if (_user != null) {
@@ -44,43 +56,66 @@ class AuthProvider extends ChangeNotifier {
     } else {
       print('⚠️ AuthProvider: No existing user found');
     }
-    
+
     // Then listen for auth state changes
     _authService.authStateChanges.listen((User? user) async {
       print('🔔 AuthProvider: Auth state changed');
       _user = user;
-      
+      _isAuthInitialized = true;
+
       if (user != null) {
         print('✅ User logged in: ${user.email}');
         await _loadShopProfile();
       } else {
         print('⚠️ User logged out');
+        _shopProfileLoadId++;
         _shopProfile = null;
+        _shouldShowOnboarding = false;
+        _isShopProfileLoading = false;
+        _shopProfileError = null;
+        notifyListeners();
       }
-      
-      notifyListeners();
     });
   }
 
   /// Load shop profile
   Future<void> _loadShopProfile() async {
+    final userId = _user?.uid;
+    if (userId == null) return;
+
+    final loadId = ++_shopProfileLoadId;
+    _isShopProfileLoading = true;
+    _shopProfileError = null;
+    notifyListeners();
+
     try {
-      _shopProfile = await _shopService.getShopProfile();
-      notifyListeners();
-    } catch (e) {
-      print('Error loading shop profile: $e');
+      final profile = await _shopService.getShopProfile();
+      if (loadId == _shopProfileLoadId && _user?.uid == userId) {
+        _shopProfile = profile;
+      }
+    } catch (error) {
+      if (loadId == _shopProfileLoadId && _user?.uid == userId) {
+        _shopProfileError = 'Could not load your shop profile: $error';
+        debugPrint('Error loading shop profile: $error');
+      }
+    } finally {
+      if (loadId == _shopProfileLoadId && _user?.uid == userId) {
+        _isShopProfileLoading = false;
+        notifyListeners();
+      }
     }
   }
 
   /// Register new tailor account
-  Future<bool> register(String email, String password, String shopName, String ownerName, String phone) async {
+  Future<bool> register(String email, String password, String shopName,
+      String ownerName, String phone) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       print('🔐 Starting registration for: $email');
-      
+
       // Create Firebase auth account
       User user;
       try {
@@ -90,7 +125,6 @@ class AuthProvider extends ChangeNotifier {
         print('❌ Firebase Auth error: $authError');
         throw Exception('Auth failed: $authError');
       }
-      
       // Create shop profile
       final profile = ShopProfile(
         userId: user.uid,
@@ -101,11 +135,10 @@ class AuthProvider extends ChangeNotifier {
         createdAt: DateTime.now(),
         isSetupComplete: false,
       );
-      
       print('📝 Creating shop profile in Firestore...');
       print('📝 User ID: ${user.uid}');
       print('📝 Shop Name: $shopName');
-      
+
       try {
         await _shopService.createShopProfile(profile);
         print('✅ Shop profile created successfully');
@@ -113,12 +146,18 @@ class AuthProvider extends ChangeNotifier {
         print('❌ Firestore error: $firestoreError');
         // Registration succeeded in Auth but failed in Firestore
         // Don't fail completely - user can complete profile later
-        _errorMessage = 'Account created but profile setup incomplete. Please complete setup.';
+        _errorMessage =
+            'Account created but profile setup incomplete. Please complete setup.';
       }
-      
+
       _user = user;
       _shopProfile = profile;
-      
+      _isAuthInitialized = true;
+      _shouldShowOnboarding = true;
+      _shopProfileLoadId++;
+      _isShopProfileLoading = false;
+      _shopProfileError = null;
+
       _isLoading = false;
       notifyListeners();
       print('✅ Registration completed');
@@ -146,16 +185,18 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       print('🔐 Starting login for: $email');
-      
-      final credential = await _authService.signInWithEmailPassword(email, password);
+
+      final credential =
+          await _authService.signInWithEmailPassword(email, password);
       print('✅ Firebase auth successful: ${credential.user!.uid}');
-      
+
       _user = credential.user;
-      await _loadShopProfile();
-      
+      _isAuthInitialized = true;
+      _shouldShowOnboarding = false;
       _isLoading = false;
       notifyListeners();
       print('✅ Login completed successfully');
+      unawaited(_loadShopProfile());
       return true;
     } on FirebaseAuthException catch (e) {
       print('❌ FirebaseAuthException: ${e.code} - ${e.message}');
@@ -175,8 +216,12 @@ class AuthProvider extends ChangeNotifier {
   /// Sign out
   Future<void> signOut() async {
     await _authService.signOut();
+    _shopProfileLoadId++;
     _user = null;
     _shopProfile = null;
+    _shouldShowOnboarding = false;
+    _isShopProfileLoading = false;
+    _shopProfileError = null;
     notifyListeners();
   }
 
@@ -189,14 +234,18 @@ class AuthProvider extends ChangeNotifier {
   Future<void> checkAuthStatus() async {
     print('🔍 Checking auth status...');
     _user = _authService.currentUser;
-    
+    _isAuthInitialized = true;
     if (_user != null) {
       print('✅ User found: ${_user!.uid}');
-      await _loadShopProfile();
+      unawaited(_loadShopProfile());
     } else {
       print('⚠️ No user found');
+      _shopProfileLoadId++;
+      _shopProfile = null;
+      _shouldShowOnboarding = false;
+      _isShopProfileLoading = false;
+      _shopProfileError = null;
     }
-    
     notifyListeners();
   }
 
@@ -207,12 +256,44 @@ class AuthProvider extends ChangeNotifier {
         isSetupComplete: true,
         updatedAt: DateTime.now(),
       );
-      
+
       await _shopService.updateShopProfile(completeProfile);
       _shopProfile = completeProfile;
+      _shouldShowOnboarding = false;
       notifyListeners();
     } catch (e) {
       throw Exception('Failed to complete onboarding: $e');
+    }
+  }
+
+  Future<void> updateShopProfile(
+    ShopProfile updatedProfile, {
+    Uint8List? profileImage,
+    String? imageContentType,
+  }) async {
+    if (_user == null) throw StateError('User must be signed in');
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      var profile = updatedProfile.copyWith(updatedAt: DateTime.now());
+      if (profileImage != null) {
+        profile = profile.copyWith(
+          profileImageUrl: await _shopService.uploadProfileImage(
+            profileImage,
+            contentType: imageContentType ?? 'image/jpeg',
+          ),
+        );
+      }
+      await _shopService.updateShopProfile(profile);
+      _shopProfile = profile;
+    } catch (error) {
+      _errorMessage = 'Failed to update shop profile: $error';
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
@@ -224,7 +305,7 @@ class AuthProvider extends ChangeNotifier {
       case 'invalid-email':
         return 'Invalid email address';
       case 'operation-not-allowed':
-        return 'Email/password accounts are not enabled';
+        return 'Email/password sign-in is disabled in Firebase Authentication. Enable it in the Firebase Console.';
       case 'weak-password':
         return 'Password is too weak. Use at least 6 characters';
       case 'user-disabled':
@@ -237,6 +318,12 @@ class AuthProvider extends ChangeNotifier {
         return 'Invalid email or password';
       case 'too-many-requests':
         return 'Too many attempts. Please try again later';
+      case 'invalid-api-key':
+        return 'Firebase API key is invalid or restricted. Check your Google Cloud API restrictions and Firebase configuration.';
+      case 'network-request-failed':
+        return 'Network error. Check your internet connection and try again.';
+      case 'app-not-authorized':
+        return 'This app is not authorized to use Firebase Authentication. Check the project configuration.';
       default:
         return 'Authentication error: $code';
     }
@@ -249,7 +336,8 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Send OTP to user's email for verification
-  Future<Map<String, dynamic>> sendOtpVerification(String email, String recipientName) async {
+  Future<Map<String, dynamic>> sendOtpVerification(
+      String email, String recipientName) async {
     return await _otpService.sendOtp(
       email: email,
       recipientName: recipientName,
@@ -259,17 +347,18 @@ class AuthProvider extends ChangeNotifier {
   /// Verify OTP code
   Future<Map<String, dynamic>> verifyOtp(String email, String otp) async {
     final result = await _otpService.verifyOtp(email: email, otp: otp);
-    
+
     if (result['success']) {
       _isEmailVerified = true;
       notifyListeners();
     }
-    
+
     return result;
   }
 
   /// Resend OTP
-  Future<Map<String, dynamic>> resendOtp(String email, String recipientName) async {
+  Future<Map<String, dynamic>> resendOtp(
+      String email, String recipientName) async {
     return await _otpService.resendOtp(
       email: email,
       recipientName: recipientName,
