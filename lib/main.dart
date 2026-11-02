@@ -29,6 +29,7 @@ import 'package:tailoring_system/features/receipts/providers/receipt_provider.da
 import 'package:tailoring_system/features/reports/providers/financial_report_provider.dart';
 import 'package:tailoring_system/features/settings/providers/app_settings_provider.dart';
 import 'package:tailoring_system/features/staff/providers/staff_provider.dart';
+import 'package:tailoring_system/features/subscriptions/data/subscription_service.dart';
 import 'package:tailoring_system/screens/splash_screen.dart';
 import 'package:tailoring_system/screens/license_screen.dart';
 import 'package:tailoring_system/utils/license_manager.dart';
@@ -36,13 +37,13 @@ import 'package:tailoring_system/l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
   await Firebase.initializeApp();
-  
+
   // Initialize local database
   initializeDatabaseFactory();
-  
+
   runApp(const TailoringSystemApp());
 }
 
@@ -121,7 +122,7 @@ class _AppInitializerState extends State<AppInitializer> {
     try {
       final db = await DatabaseHelper.instance.database;
       print('✅ Database initialized successfully');
-      
+
       // Run sync migrations
       await SyncMigration.runAllMigrations(db);
     } catch (e) {
@@ -140,7 +141,7 @@ class _AppInitializerState extends State<AppInitializer> {
       print('🔍 Checking auth status...');
       await authProvider.checkAuthStatus();
       print('✅ Auth status checked');
-      
+
       if (!mounted) return;
 
       // If not authenticated, go to auth flow
@@ -179,6 +180,13 @@ class _AppInitializerState extends State<AppInitializer> {
       print('⚠️ License check error: $e');
       // Default to license screen if check fails
       isLicensed = false;
+    }
+
+    try {
+      final subscription = await SubscriptionService().loadStatus();
+      isLicensed = isLicensed || (subscription?.isActive ?? false);
+    } catch (error) {
+      debugPrint('Subscription status check error: $error');
     }
 
     if (!mounted) return;

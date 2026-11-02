@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tailoring_system/l10n/app_localizations.dart';
+import 'package:tailoring_system/screens/chapa_subscriptions_screen.dart';
 import 'package:tailoring_system/utils/license_manager.dart';
 
 class PricingScreen extends StatefulWidget {
@@ -150,6 +151,37 @@ class _PricingScreenState extends State<PricingScreen> {
 
           const SizedBox(height: 20),
 
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Prefer online checkout?',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Pay securely with Chapa and activate your subscription after server verification.',
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ChapaSubscriptionsScreen(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.lock_outline),
+                    label: const Text('Subscribe with Chapa'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
           // ── Plans ────────────────────────────────────────────────────────
           _PlanCard(
             name: l10n.pricingBasic,
@@ -167,7 +199,8 @@ class _PricingScreenState extends State<PricingScreen> {
             ],
             color: Colors.blue.shade600,
             isPopular: false,
-            onBuy: () => _showPaymentInstructions(context, l10n.pricingBasic, l10n.pricingBasicPrice),
+            onBuy: () => _showPaymentInstructions(
+                context, l10n.pricingBasic, l10n.pricingBasicPrice),
           ),
 
           const SizedBox(height: 12),
@@ -189,7 +222,8 @@ class _PricingScreenState extends State<PricingScreen> {
             color: const Color(0xFF8B5CF6),
             isPopular: true,
             popularLabel: l10n.pricingPopular,
-            onBuy: () => _showPaymentInstructions(context, l10n.pricingPro, l10n.pricingProPrice),
+            onBuy: () => _showPaymentInstructions(
+                context, l10n.pricingPro, l10n.pricingProPrice),
           ),
 
           const SizedBox(height: 12),
@@ -208,7 +242,8 @@ class _PricingScreenState extends State<PricingScreen> {
             ],
             color: Colors.orange.shade700,
             isPopular: false,
-            onBuy: () => _showPaymentInstructions(context, l10n.pricingEnterprise, l10n.pricingEnterprisePrice),
+            onBuy: () => _showPaymentInstructions(
+                context, l10n.pricingEnterprise, l10n.pricingEnterprisePrice),
           ),
 
           const SizedBox(height: 24),
@@ -272,7 +307,8 @@ class _PricingScreenState extends State<PricingScreen> {
                       IconButton(
                         icon: Icon(
                           _copied ? Icons.check_circle : Icons.copy,
-                          color: _copied ? Colors.green : const Color(0xFF8B5CF6),
+                          color:
+                              _copied ? Colors.green : const Color(0xFF8B5CF6),
                         ),
                         onPressed: _copyDeviceId,
                         tooltip: 'Copy Device ID',
@@ -382,7 +418,8 @@ class _PricingScreenState extends State<PricingScreen> {
     );
   }
 
-  void _showPaymentInstructions(BuildContext context, String plan, String price) {
+  void _showPaymentInstructions(
+      BuildContext context, String plan, String price) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -419,7 +456,9 @@ class _PricingScreenState extends State<PricingScreen> {
             _StepTile(text: '1. Send $price to TeleBirr: +251-912-345-678'),
             _StepTile(text: '2. Take a screenshot of the payment'),
             _StepTile(text: '3. Copy your Device ID (button below)'),
-            _StepTile(text: '4. Send screenshot + Device ID + shop name to t.me/TailorSystemET'),
+            _StepTile(
+                text:
+                    '4. Send screenshot + Device ID + shop name to t.me/TailorSystemET'),
             _StepTile(text: '5. Get your license key within 24 hours'),
             const SizedBox(height: 20),
             Row(
@@ -514,7 +553,8 @@ class _PlanCard extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: color.withOpacity(0.08),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(18)),
             ),
             child: Row(
               children: [
@@ -525,7 +565,8 @@ class _PlanCard extends StatelessWidget {
                       if (isPopular && popularLabel != null)
                         Container(
                           margin: const EdgeInsets.only(bottom: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 3),
                           decoration: BoxDecoration(
                             color: color,
                             borderRadius: BorderRadius.circular(20),
@@ -571,7 +612,8 @@ class _PlanCard extends StatelessWidget {
                     if (price.contains('/'))
                       Text(
                         '/ ${price.split('/').last.trim()}',
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                   ],
                 ),
@@ -587,13 +629,16 @@ class _PlanCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 3),
                         child: Row(
                           children: [
-                            Text(f.substring(0, 2), style: const TextStyle(fontSize: 14)),
+                            Text(f.substring(0, 2),
+                                style: const TextStyle(fontSize: 14)),
                             const SizedBox(width: 6),
                             Text(
                               f.substring(2),
                               style: TextStyle(
                                 fontSize: 13,
-                                color: f.startsWith('❌') ? Colors.grey : Colors.black87,
+                                color: f.startsWith('❌')
+                                    ? Colors.grey
+                                    : Colors.black87,
                               ),
                             ),
                           ],

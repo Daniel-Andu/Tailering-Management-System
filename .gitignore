@@ -64,6 +64,9 @@ app-signing-key.jks
 .env.production
 .env.staging
 *.env
+backend/.env
+backend/node_modules/
+backend/*serviceAccount*.json
 
 # License Keys & Activation Data
 license-keys/
@@ -145,7 +148,6 @@ $RECYCLE.BIN/
 *.g.dart
 *.freezed.dart
 *.gr.dart
-lib/generated_plugin_registrant.dart
 
 # l10n Generated Files (keep source .arb files, ignore generated)
 lib/l10n/app_localizations*.dart

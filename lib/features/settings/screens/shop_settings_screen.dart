@@ -6,6 +6,7 @@ import 'package:tailoring_system/l10n/app_localizations.dart';
 import 'package:tailoring_system/providers/language_provider.dart';
 import 'package:tailoring_system/providers/auth_provider.dart';
 import 'package:tailoring_system/screens/auth/auth_router.dart';
+import 'package:tailoring_system/screens/chapa_subscriptions_screen.dart';
 import 'package:tailoring_system/utils/license_manager.dart';
 
 class ShopSettingsScreen extends StatefulWidget {
@@ -124,7 +125,7 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                 builder: (context, authProvider, _) {
                   final user = authProvider.currentUser;
                   final shopProfile = authProvider.shopProfile;
-                  
+
                   return _SectionCard(
                     icon: Icons.account_circle,
                     title: 'Account & Profile',
@@ -282,6 +283,19 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
                         ],
                       ),
                     ],
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const ChapaSubscriptionsScreen(),
+                          ),
+                        ),
+                        icon: const Icon(Icons.payment),
+                        label: const Text('Plans and Chapa checkout'),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -409,15 +423,18 @@ class _ShopSettingsScreenState extends State<ShopSettingsScreen> {
   Future<void> _editProfile(BuildContext context) async {
     final authProvider = context.read<AuthProvider>();
     final shopProfile = authProvider.shopProfile;
-    
+
     if (shopProfile == null) return;
 
-    final shopNameController = TextEditingController(text: shopProfile.shopName);
-    final ownerNameController = TextEditingController(text: shopProfile.ownerName);
-    final phoneController = TextEditingController(text: shopProfile.phoneNumber);
+    final shopNameController =
+        TextEditingController(text: shopProfile.shopName);
+    final ownerNameController =
+        TextEditingController(text: shopProfile.ownerName);
+    final phoneController =
+        TextEditingController(text: shopProfile.phoneNumber);
     final addressController = TextEditingController(text: shopProfile.address);
     final cityController = TextEditingController(text: shopProfile.city);
-    String? selectedSpecialization = shopProfile.specialization;  // Allow null
+    String? selectedSpecialization = shopProfile.specialization; // Allow null
 
     final updated = await showDialog<bool>(
       context: context,
