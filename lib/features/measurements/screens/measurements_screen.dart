@@ -37,7 +37,7 @@ class _MeasurementsScreenState extends State<MeasurementsScreen>
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(l10n.measurementsTitle),
         bottom: TabBar(
@@ -211,7 +211,7 @@ class _ClothTypePanel extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     return Container(
-      color: Colors.white,
+      color: theme.colorScheme.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -454,7 +454,7 @@ class _CustomFieldsTab extends StatelessWidget {
     return Consumer<MeasurementProvider>(
       builder: (context, provider, _) {
         return Scaffold(
-          backgroundColor: const Color(0xFFF8FAFC),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => _showAddFieldDialog(context, provider),
             icon: const Icon(Icons.add),
@@ -505,8 +505,8 @@ class _CustomFieldsTab extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.add_chart,
-                            size: 72, color: Colors.grey[300]),
-                        const SizedBox(height: 16),
+                            size: 64, color: Colors.grey[300]), // Reduced from 72 to 64
+                        const SizedBox(height: 12), // Reduced from 16 to 12
                         Text(
                           l10n.measurementsNoCustomFields,
                           style: theme.textTheme.titleMedium
@@ -517,7 +517,7 @@ class _CustomFieldsTab extends StatelessWidget {
                           l10n.measurementsNoCustomFieldsHint,
                           style: TextStyle(color: Colors.grey[400]),
                         ),
-                        const SizedBox(height: 80),
+                        // Removed the 80px spacing at bottom to prevent overflow
                       ],
                     ),
                   ),
@@ -594,50 +594,117 @@ class _CustomFieldsTab extends StatelessWidget {
     final labelController = TextEditingController();
     final unitController = TextEditingController(text: 'cm');
 
+    // DEBUG
+    print('🔍 ADD CUSTOM FIELD DIALOG: Opening with fixed size 500x400');
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.add_chart, color: Theme.of(ctx).colorScheme.primary),
-            const SizedBox(width: 8),
-            Text(l10n.measurementsAddCustomField),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: labelController,
-              decoration: InputDecoration(
-                labelText: l10n.measurementsFieldName,
-                hintText: l10n.measurementsFieldNameHint,
-                prefixIcon: const Icon(Icons.label_outline),
+      builder: (ctx) => Dialog(
+        child: SizedBox(
+          width: 500,
+          height: 400, // Increased from 350 to 400 to prevent overflow
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(ctx).colorScheme.primaryContainer,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.add_chart,
+                        color: Theme.of(ctx).colorScheme.primary),
+                    const SizedBox(width: 12),
+                    Text(
+                      l10n.measurementsAddCustomField,
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(ctx, false),
+                    ),
+                  ],
+                ),
               ),
-              textCapitalization: TextCapitalization.words,
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: unitController,
-              decoration: InputDecoration(
-                labelText: l10n.measurementsUnit,
-                hintText: l10n.measurementsUnitHint,
-                prefixIcon: const Icon(Icons.straighten),
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              TextField(
+                                controller: labelController,
+                                decoration: InputDecoration(
+                                  labelText: l10n.measurementsFieldName,
+                                  hintText: l10n.measurementsFieldNameHint,
+                                  prefixIcon: const Icon(Icons.label),
+                                ),
+                                textCapitalization: TextCapitalization.words,
+                                autofocus: true,
+                              ),
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller: unitController,
+                                decoration: InputDecoration(
+                                  labelText: l10n.measurementsUnit,
+                                  hintText: l10n.measurementsUnitHint,
+                                  prefixIcon: const Icon(Icons.straighten),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+              // Footer
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(ctx).colorScheme.surface,
+                  border: Border(
+                    top: BorderSide(
+                      color: Theme.of(ctx).dividerColor,
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text(l10n.commonCancel),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(l10n.commonAdd),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.commonAdd),
-          ),
-        ],
       ),
     );
 
@@ -661,46 +728,109 @@ class _CustomFieldsTab extends StatelessWidget {
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.edit, color: Theme.of(ctx).colorScheme.primary),
-            const SizedBox(width: 8),
-            Text(l10n.measurementsEditCustomField),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: labelController,
-              decoration: InputDecoration(
-                labelText: l10n.measurementsFieldName,
-                prefixIcon: const Icon(Icons.label_outline),
+      builder: (ctx) => Dialog(
+        child: SizedBox(
+          width: 500,
+          height: 400, // Increased from 350 to 400 to prevent overflow
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(ctx).colorScheme.primaryContainer,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, color: Theme.of(ctx).colorScheme.primary),
+                    const SizedBox(width: 12),
+                    Text(
+                      l10n.measurementsEditCustomField,
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(ctx, false),
+                    ),
+                  ],
+                ),
               ),
-              textCapitalization: TextCapitalization.words,
-              autofocus: true,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: unitController,
-              decoration: InputDecoration(
-                labelText: l10n.measurementsUnit,
-                prefixIcon: const Icon(Icons.straighten),
+              // Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              TextField(
+                                controller: labelController,
+                                decoration: InputDecoration(
+                                  labelText: l10n.measurementsFieldName,
+                                  prefixIcon: const Icon(Icons.label),
+                                ),
+                                textCapitalization: TextCapitalization.words,
+                                autofocus: true,
+                              ),
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller: unitController,
+                                decoration: InputDecoration(
+                                  labelText: l10n.measurementsUnit,
+                                  prefixIcon: const Icon(Icons.straighten),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+              // Footer
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(ctx).colorScheme.surface,
+                  border: Border(
+                    top: BorderSide(
+                      color: Theme.of(ctx).dividerColor,
+                      width: 1,
+                    ),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text(l10n.commonCancel),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(l10n.commonSave),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(l10n.commonSave),
-          ),
-        ],
       ),
     );
 

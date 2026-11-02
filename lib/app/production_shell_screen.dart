@@ -237,7 +237,7 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
         NavigationDestination(
           icon: const Icon(Icons.dashboard_outlined),
           selectedIcon: const Icon(Icons.dashboard),
-          label: l10n.menuDashboard,
+          label: l10n.menuHome,
         ),
         NavigationDestination(
           icon: const Icon(Icons.people_outline),
@@ -252,12 +252,12 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
         NavigationDestination(
           icon: const Icon(Icons.straighten_outlined),
           selectedIcon: const Icon(Icons.straighten),
-          label: 'Measure',
+          label: l10n.menuMeasure,
         ),
         NavigationDestination(
           icon: const Icon(Icons.person_outline),
           selectedIcon: const Icon(Icons.person),
-          label: 'Profile', // TODO: Add to l10n
+          label: l10n.menuProfile,
         ),
       ],
     );
@@ -286,7 +286,7 @@ class _ProductionShellScreenState extends State<ProductionShellScreen> {
       case 9:
         return l10n.menuSettings;
       case 10:
-        return 'Profile'; // TODO: Add to l10n
+        return l10n.menuProfile;
       default:
         return l10n.appTitle;
     }
